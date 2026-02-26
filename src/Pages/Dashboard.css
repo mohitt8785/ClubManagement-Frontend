@@ -1,0 +1,257 @@
+/* ─── Dashboard Root ─────────────────────────────────────────── */
+.db-root {
+  min-height: 100vh;
+  background: var(--dark, #06060E);
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Background atmosphere */
+.db-root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 5% 0%, rgba(201,168,76,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 50% at 95% 100%, rgba(160,100,30,0.04) 0%, transparent 55%);
+}
+
+/* Subtle grid */
+.db-root::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(201,168,76,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,76,0.018) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ─── Wrapper ────────────────────────────────────────────────── */
+.db-wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 28px 60px;
+  animation: dbIn 0.55s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+@keyframes dbIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Page Header ────────────────────────────────────────────── */
+.db-header {
+  margin-top: 50px;
+  margin-bottom: 20px;
+}
+
+.db-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 24px;
+  background: rgba(201,168,76,0.03);
+  border: 1px solid var(--border, rgba(201,168,76,0.16));
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle left gold bar */
+.db-header-inner::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, transparent, var(--gold, #C9A84C), transparent);
+  opacity: 0.7;
+}
+
+.db-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.db-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 2px;
+  border: 1px solid rgba(201,168,76,0.2);
+  background: rgba(201,168,76,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold, #C9A84C);
+  flex-shrink: 0;
+}
+.db-header-icon svg { width: 18px; height: 18px; }
+
+.db-header-text { display: flex; flex-direction: column; gap: 3px; }
+
+.db-header-eyebrow {
+  font-family: 'Outfit', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  color: rgba(201,168,76,0.4);
+}
+
+.db-header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #E8C96A, #C9A84C 60%, #A07830);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+}
+
+.db-header-sub {
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px;
+  color: rgba(240,234,214,0.28);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 300;
+}
+
+/* Right side stats */
+.db-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.db-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 20px;
+  border: 1px solid var(--border-soft, rgba(201,168,76,0.08));
+  border-radius: 2px;
+  min-width: 90px;
+}
+
+.db-stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold, #C9A84C);
+  line-height: 1;
+}
+
+.db-stat-label {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(240,234,214,0.25);
+}
+
+/* ─── Tabs ───────────────────────────────────────────────────── */
+.db-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid var(--border, rgba(201,168,76,0.16));
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  background: rgba(201,168,76,0.02);
+  width: fit-content;
+}
+
+.db-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 28px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border, rgba(201,168,76,0.16));
+  color: rgba(240,234,214,0.3);
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+
+.db-tab:last-of-type { border-right: none; }
+
+.db-tab:hover {
+  color: rgba(201,168,76,0.7);
+  background: rgba(201,168,76,0.04);
+}
+
+.db-tab.active {
+  color: var(--gold, #C9A84C);
+  background: rgba(201,168,76,0.07);
+}
+
+.db-tab-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.db-tab-icon svg { width: 13px; height: 13px; }
+
+.db-tab-label { white-space: nowrap; }
+
+/* Active bottom bar */
+.db-tab-active-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold, #C9A84C), transparent);
+}
+
+/* ─── Content ────────────────────────────────────────────────── */
+.db-content {
+  animation: dbContentIn 0.3s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+@keyframes dbContentIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .db-wrap { padding: 20px 16px 48px; }
+  .db-header-right { display: none; }
+  .db-header-inner { padding: 16px 20px; }
+  .db-header-title { font-size: 22px; }
+}
+
+@media (max-width: 480px) {
+  .db-wrap { padding: 16px 12px 40px; }
+  .db-header-inner { padding: 14px 16px; }
+  .db-header-title { font-size: 20px; }
+  .db-header-icon { width: 36px; height: 36px; }
+  .db-tab { padding: 10px 18px; font-size: 10px; letter-spacing: 1.5px; gap: 7px; }
+}
+
+@media (max-width: 360px) {
+  .db-tab-label { display: none; }
+  .db-tab { padding: 10px 16px; }
+  .db-tab-icon svg { width: 15px; height: 15px; }
+}

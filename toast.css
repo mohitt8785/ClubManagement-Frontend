@@ -1,0 +1,37 @@
+/* Base toast */
+.Toastify__toast {
+  background: linear-gradient(
+    135deg,
+    #c9a227,
+    #e0b84a
+  ); /* metallic gold */
+  color: #020617;            /* deep black text */
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Success toast */
+.Toastify__toast--success {
+  border-left: 6px solid #020617; /* dark green accent */
+}
+
+/* Icon */
+.Toastify__toast-icon svg {
+  fill: #020617; /* dark green check */
+}
+
+/* Close button */
+.Toastify__close-button {
+  color: #020617;
+  opacity: 0.8;
+}
+.Toastify__close-button:hover {
+  opacity: 1;
+}
+
+/* Progress bar */
+.Toastify__progress-bar {
+  background: #020617;
+}
