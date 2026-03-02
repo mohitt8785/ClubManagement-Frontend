@@ -1,84 +1,76 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import Navbar from "../Components/Navbar/Navbar";
 import EntryForm from "../Components/EntryForm/EntryForm";
 import AllEntries from "../Components/AllEntries/AllEntries";
 import "./Dashboard.css";
 
-const API_URL = "http://localhost:5000/api/entries";
+const API_URL = `${import.meta.env.VITE_API_URL}/entries`;
+
+// ✅ Clock moved to separate component — no more full Dashboard re-render!
+function LiveClock() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (date) =>
+    date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+
+  const formatDate = (date) =>
+    date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+  return (
+    <>
+      <div className="db-stat">
+        <span className="db-stat-value">{formatTime(currentTime)}</span>
+        <span className="db-stat-label">Current Time</span>
+      </div>
+      <div className="db-stat">
+        <span className="db-stat-value">{formatDate(currentTime)}</span>
+        <span className="db-stat-label">Today's Date</span>
+      </div>
+    </>
+  );
+}
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("form");
   const [refresh, setRefresh] = useState(0);
   const [totalGuests, setTotalGuests] = useState(0);
-  const [currentTime, setCurrentTime] = useState(new Date());
 
-  console.log("🎯 Dashboard rendered - Active Tab:", activeTab, "Refresh count:", refresh);
-
-  // Update time every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  // Fetch total guests on mount and refresh
-  useEffect(() => {
-    fetchTotalGuests();
-  }, [refresh]);
-
-  const fetchTotalGuests = async () => {
+  // ✅ useCallback — function recreate nahi hoga baar baar
+  const fetchTotalGuests = useCallback(async () => {
     try {
-      console.log("📊 Fetching total guests...");
       const res = await axios.get(API_URL);
-      
       if (res.data.success) {
-        const total = res.data.data.length;
-        setTotalGuests(total);
-        console.log("✅ Total guests updated:", total);
+        setTotalGuests(res.data.count); // ✅ .length ki jagah .count use karo
       }
     } catch (err) {
-      console.error("❌ Failed to fetch total guests:", err);
+      // silent fail
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchTotalGuests();
+  }, [refresh, fetchTotalGuests]);
 
   const handleEntryAdded = () => {
-    console.log("✅ Entry added successfully! Switching to All Entries tab in 2 seconds...");
-    
     setTimeout(() => {
-      setRefresh(prev => {
-        console.log("🔄 Refreshing AllEntries component - New refresh value:", prev + 1);
-        return prev + 1;
-      });
+      setRefresh((prev) => prev + 1);
       setActiveTab("entries");
-      console.log("📋 Switched to 'entries' tab");
-    }, 2000);
-  };
-
-  const handleTabChange = (tab) => {
-    console.log("🔀 Tab change requested:", tab);
-    setActiveTab(tab);
-  };
-
-  // Format time (HH:MM:SS AM/PM)
-  const formatTime = (date) => {
-    return date.toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true
-    });
-  };
-
-  // Format date (DD MMM YYYY)
-  const formatDate = (date) => {
-    return date.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
+    }, 1500); // ✅ 2s se 1.5s kiya
   };
 
   return (
@@ -107,18 +99,9 @@ export default function Dashboard() {
             </div>
 
             <div className="db-header-right">
-              {/* Time Display */}
-              <div className="db-stat">
-                <span className="db-stat-value">{formatTime(currentTime)}</span>
-                <span className="db-stat-label">Current Time</span>
-              </div>
-              
-              {/* Date Display */}
-              <div className="db-stat">
-                <span className="db-stat-value">{formatDate(currentTime)}</span>
-                <span className="db-stat-label">Today's Date</span>
-              </div>
-              
+              {/* ✅ Clock alag component mein */}
+              <LiveClock />
+
               {/* Total Guests */}
               <div className="db-stat">
                 <span className="db-stat-value">{totalGuests}</span>
@@ -132,7 +115,7 @@ export default function Dashboard() {
         <div className="db-tabs">
           <button
             className={"db-tab" + (activeTab === "form" ? " active" : "")}
-            onClick={() => handleTabChange("form")}
+            onClick={() => setActiveTab("form")}
           >
             <span className="db-tab-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -146,7 +129,7 @@ export default function Dashboard() {
 
           <button
             className={"db-tab" + (activeTab === "entries" ? " active" : "")}
-            onClick={() => handleTabChange("entries")}
+            onClick={() => setActiveTab("entries")}
           >
             <span className="db-tab-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

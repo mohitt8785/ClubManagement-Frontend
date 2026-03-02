@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import jsPDF from "jspdf";
 import "./EntryDetail.css";
 
-const API_URL = "http://localhost:5000/api/entries";
+const API_URL = `${import.meta.env.VITE_API_URL}/entries`;
+
 
 export default function EntryDetail() {
   const { id } = useParams();
@@ -12,33 +13,26 @@ export default function EntryDetail() {
   const [entry, setEntry] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (id) fetchEntry();
-  }, [id]);
-
-  const fetchEntry = async () => {
+  // ✅ useCallback lagaya — stable function
+  const fetchEntry = useCallback(async () => {
     try {
-      console.log("📡 Fetching entry:", id);
       const res = await axios.get(`${API_URL}/${id}`);
-      console.log("✅ Entry loaded:", res.data.data);
       setEntry(res.data.data);
-      setLoading(false);
     } catch (err) {
-      console.error("❌ Error loading entry:", err);
+      // silent fail
+    } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) fetchEntry();
+  }, [id, fetchEntry]); // ✅ fetchEntry dependency mein
 
   const handleDownloadPDF = async () => {
     if (!entry) return;
 
-    console.log("📄 Generating 2-page PDF for SR No:", entry.srNo);
-
     const doc = new jsPDF();
-
-    // ─────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────
 
     const loadImage = (url) =>
       new Promise((resolve, reject) => {
@@ -56,10 +50,7 @@ export default function EntryDetail() {
     const colWidth = 120;
 
     const checkPageBreak = () => {
-      if (y > 260) {
-        doc.addPage();
-        y = 20;
-      }
+      if (y > 260) { doc.addPage(); y = 20; }
     };
 
     const section = (title) => {
@@ -75,27 +66,17 @@ export default function EntryDetail() {
 
     const line = (label, val) => {
       checkPageBreak();
-
       doc.setFont(undefined, "bold");
       doc.setFontSize(10);
       doc.text(label, labelX, y);
-
       doc.setFont(undefined, "normal");
       doc.setFontSize(12);
-      const lines = doc.splitTextToSize(
-        String(val || "—"),
-        colWidth - valueX + leftX
-      );
+      const lines = doc.splitTextToSize(String(val || "—"), colWidth - valueX + leftX);
       doc.text(lines, valueX, y);
-
       y += lines.length * 6 + 2;
     };
 
-    // ─────────────────────────────────────────
-    // PAGE 1
-    // ─────────────────────────────────────────
-
-    // Header
+    // ── PAGE 1 ──
     doc.setFillColor(201, 168, 76);
     doc.rect(0, 0, 210, 40, "F");
     doc.setTextColor(7, 7, 13);
@@ -106,11 +87,10 @@ export default function EntryDetail() {
     doc.setFontSize(10);
     doc.text("Guest Entry Record", 105, 28, { align: "center" });
     doc.setFontSize(9);
+    // ✅ tableNo null check
     doc.text(
-      `SR #${entry.srNo}  •  Table ${entry.tableNo}  •  ${entry.category}`,
-      105,
-      35,
-      { align: "center" }
+      `SR #${entry.srNo}  •  Table ${entry.tableNo ?? "N/A"}  •  ${entry.category}`,
+      105, 35, { align: "center" }
     );
 
     // Live Photo
@@ -118,23 +98,20 @@ export default function EntryDetail() {
       if (entry.livePhotoUrl) {
         const img = await loadImage(entry.livePhotoUrl);
         const x = 145, yImg = 55, size = 50;
-
         doc.addImage(img, "JPEG", x, yImg, size, size);
         doc.setDrawColor(201, 168, 76);
         doc.setLineWidth(2);
         doc.rect(x, yImg, size, size);
-
         doc.setFontSize(7);
         doc.setTextColor(120);
         doc.text(`${entry.name} ${entry.surname}`, x + size / 2, yImg + size + 5, { align: "center" });
       }
     } catch (e) {
-      console.error("Photo load error", e);
+      // silent fail
     }
 
     doc.setTextColor(0);
 
-    // Content
     section("PERSONAL INFORMATION");
     line("Name:", `${entry.name} ${entry.surname}`);
     line("Contact:", entry.contactNo);
@@ -145,7 +122,7 @@ export default function EntryDetail() {
     section("ENTRY DETAILS");
     line("Time:", entry.entryTime);
     line("Date:", new Date(entry.createdAt).toLocaleDateString("en-IN"));
-    line("Table:", entry.tableNo);
+    line("Table:", entry.tableNo ?? "N/A"); // ✅ null check
     line("Category:", entry.category);
     y += 3;
 
@@ -153,7 +130,6 @@ export default function EntryDetail() {
     line("Mode:", entry.paymentMode);
     line("DS Amount:", `INR ${entry.dsAmount || 0}`);
     line("RS Amount:", `INR ${entry.rsAmount || 0}`);
-
     doc.setFont(undefined, "bold");
     doc.setFontSize(11);
     doc.text("Total:", labelX, y);
@@ -179,17 +155,13 @@ export default function EntryDetail() {
       doc.text(remarks, labelX, y);
     }
 
-    // Footer
     doc.setFontSize(7);
     doc.setTextColor(120);
     doc.text("Page 1 of 2 • Jaguar Club Entry Management", 105, 285, { align: "center" });
     doc.setDrawColor(201, 168, 76);
     doc.rect(10, 10, 190, 277);
 
-    // ─────────────────────────────────────────
-    // PAGE 2 – ID PROOFS
-    // ─────────────────────────────────────────
-
+    // ── PAGE 2 – ID PROOFS ──
     if (entry.idFrontUrl || entry.idBackUrl) {
       doc.addPage();
 
@@ -201,12 +173,7 @@ export default function EntryDetail() {
       doc.text("ID PROOF", 105, 18, { align: "center" });
       doc.setFont(undefined, "normal");
       doc.setFontSize(9);
-      doc.text(
-        `SR #${entry.srNo} • ${entry.name} ${entry.surname}`,
-        105,
-        27,
-        { align: "center" }
-      );
+      doc.text(`SR #${entry.srNo} • ${entry.name} ${entry.surname}`, 105, 27, { align: "center" });
 
       let pageY = 50;
 
@@ -221,16 +188,12 @@ export default function EntryDetail() {
         const maxW = 170, maxH = 100;
         const ratio = img.width / img.height;
         let w = maxW, h = maxW / ratio;
-        if (h > maxH) {
-          h = maxH;
-          w = maxH * ratio;
-        }
+        if (h > maxH) { h = maxH; w = maxH * ratio; }
 
         const x = (210 - w) / 2;
         doc.addImage(img, "JPEG", x, pageY, w, h);
         doc.setDrawColor(201, 168, 76);
         doc.rect(x, pageY, w, h);
-
         pageY += h + 20;
       };
 
@@ -238,27 +201,23 @@ export default function EntryDetail() {
         if (entry.idFrontUrl) await renderIdImage("ID FRONT SIDE", entry.idFrontUrl);
         if (entry.idBackUrl) await renderIdImage("ID BACK SIDE", entry.idBackUrl);
       } catch (e) {
-        console.error("ID image error", e);
+        // silent fail
       }
 
       doc.setFontSize(7);
       doc.setTextColor(120);
       doc.text(
         `Page 2 of 2 • Generated: ${new Date().toLocaleString("en-IN")}`,
-        105,
-        285,
-        { align: "center" }
+        105, 285, { align: "center" }
       );
       doc.setDrawColor(201, 168, 76);
       doc.rect(10, 10, 190, 277);
     }
 
     doc.save(`JaguarClub_SR${entry.srNo}_${entry.name}.pdf`);
-    console.log("✅ PDF generated successfully");
   };
-  const handleClose = () => {
-    navigate("/dashboard");
-  };
+
+  const handleClose = () => navigate("/dashboard");
 
   if (loading) {
     return (
@@ -311,7 +270,8 @@ export default function EntryDetail() {
               <DetailSection title="Entry Details">
                 <DetailRow label="Entry Time" value={entry.entryTime} />
                 <DetailRow label="Entry Date" value={new Date(entry.createdAt).toLocaleDateString("en-IN")} />
-                <DetailRow label="Table No" value={`Table ${entry.tableNo}`} />
+                {/* ✅ tableNo null check */}
+                <DetailRow label="Table No" value={entry.tableNo ? `Table ${entry.tableNo}` : "N/A"} />
                 <DetailRow label="Category">
                   <span className={`category-badge ${entry.category.toLowerCase()}`}>{entry.category}</span>
                 </DetailRow>
@@ -348,7 +308,6 @@ export default function EntryDetail() {
 
             <div className="photos-column">
               <h3 className="column-heading">📸 Photos</h3>
-
               <div className="photos-stack">
                 {entry.livePhotoUrl && (
                   <div className="photo-card">
@@ -376,8 +335,10 @@ export default function EntryDetail() {
 
         <div className="modal-footer">
           <button onClick={handleDownloadPDF} className="btn-download">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="13" height="13" style={{ marginRight: 6, verticalAlign: 'middle' }}>
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="13" height="13" style={{ marginRight: 6, verticalAlign: "middle" }}>
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
             Download PDF
           </button>

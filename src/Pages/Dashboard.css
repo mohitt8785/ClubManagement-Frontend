@@ -3,7 +3,6 @@
   min-height: 100vh;
   background: var(--dark, #06060E);
   position: relative;
-  overflow-y: auto;
   overflow-x: hidden;
 }
 
@@ -39,6 +38,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 28px 28px 60px;
+  padding-top: 118px; 
   animation: dbIn 0.55s cubic-bezier(0.16,1,0.3,1) both;
 }
 
@@ -49,8 +49,8 @@
 
 /* ─── Page Header ────────────────────────────────────────────── */
 .db-header {
-  margin-top: 50px;
-  margin-bottom: 20px;
+  margin: 25px 0px;
+ 
 }
 
 .db-header-inner {
@@ -171,7 +171,7 @@
   border: 1px solid var(--border, rgba(201,168,76,0.16));
   border-radius: 2px;
   overflow: hidden;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   background: rgba(201,168,76,0.02);
   width: fit-content;
 }
@@ -236,14 +236,19 @@
 
 /* ─── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .db-wrap { padding: 20px 16px 48px; }
+  .db-wrap { padding: 20px 16px 48px; padding-top: 84px;  }
   .db-header-right { display: none; }
   .db-header-inner { padding: 16px 20px; }
   .db-header-title { font-size: 22px; }
 }
 
+@media (max-width: 600px) {
+  .db-wrap { padding: 16px 12px 40px; padding-top: 76px; }
+}
+
+
 @media (max-width: 480px) {
-  .db-wrap { padding: 16px 12px 40px; }
+  .db-wrap { padding: 16px 12px 40px; padding-top: 72px;  }
   .db-header-inner { padding: 14px 16px; }
   .db-header-title { font-size: 20px; }
   .db-header-icon { width: 36px; height: 36px; }
