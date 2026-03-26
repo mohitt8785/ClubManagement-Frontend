@@ -43,7 +43,7 @@ const ProtectedRoute = ({ children, ownerOnly = false, staffOnly = false }) => {
   if (ownerOnly && !isOwner) return <Navigate to="/dashboard" replace />;
 
   // Staff only route — owner ne try kiya → owner dashboard
-  if (staffOnly && !isStaff) return <Navigate to="/owner" replace />;
+  if (staffOnly && !isStaff) return <Navigate to="/dashboard" replace />;
 
   return children;
 };
