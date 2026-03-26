@@ -1,4 +1,4 @@
-// Pages/Login/Login.jsx
+// Pages/Login/Login.jsx - FIXED VERSION (Key parts only)
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -7,30 +7,42 @@ import { useAuth } from "../../Context/AuthContext.jsx";
 import "./Login.css";
 
 export default function Login() {
-  const [role, setRole]         = useState("staff");
+  const [role, setRole] = useState("staff");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading]   = useState(false);
+  const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
-  const [mounted, setMounted]   = useState(false);
-  const [toast, setToast]       = useState(null);
+  const [mounted, setMounted] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, initialized } = useAuth(); // ✅ Get initialized flag
 
+  // ✅ IMPROVED: Check auth status ONLY after initialization
   useEffect(() => {
     setTimeout(() => setMounted(true), 80);
+
+    // Wait for auth context to be ready
+    if (!initialized) {
+      console.log("[Login] Auth not initialized yet, waiting...");
+      return; // Don't check auth until context is ready
+    }
+
+    console.log("[Login] Auth initialized, checking stored user...");
+
     const stored = localStorage.getItem("jc_user");
     if (stored) {
       try {
         const user = JSON.parse(stored);
+        console.log("[Login] User found, redirecting to", user.role === "owner" ? "/owner" : "/dashboard");
         const redirect = user.role === "owner" ? "/owner" : "/dashboard";
         navigate(redirect, { replace: true });
-      } catch {
+      } catch (err) {
+        console.error("[Login] Parse error:", err);
         localStorage.removeItem("jc_user");
       }
     }
-  }, [navigate]);
+  }, [navigate, initialized]); // ✅ Add initialized to dependencies
 
   const handleRoleSwitch = (r) => {
     if (r === role) return;
@@ -49,8 +61,10 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res  = await api.post("/auth/login", { username, password });
+      const res = await api.post("/auth/login", { username, password });
       const user = res.data.data;
+
+      console.log("[Login] Login response:", user);
 
       if (user.role !== role) {
         showToast(`This is ${role} portal. Use correct portal.`, "error");
@@ -58,14 +72,18 @@ export default function Login() {
         return;
       }
 
-      login(user);
+      login(user); // ✅ This sets localStorage + state
       showToast(`Welcome, ${user.username}. Access granted.`, "success");
 
-      // Owner → /owner, Staff → /dashboard
-      const redirect = user.role === "owner" ? "/owner" : "/dashboard";
-      setTimeout(() => navigate(redirect), 900);
+      // ✅ IMPORTANT: Wait a bit for state to update, then navigate
+      setTimeout(() => {
+        const redirect = user.role === "owner" ? "/owner" : "/dashboard";
+        console.log("[Login] Navigating to", redirect);
+        navigate(redirect, { replace: true });
+      }, 900);
     } catch (err) {
       const msg = err.response?.data?.message || "Invalid credentials. Access denied.";
+      console.error("[Login] Error:", msg);
       showToast(msg, "error");
       setLoading(false);
     }

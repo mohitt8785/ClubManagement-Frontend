@@ -1,46 +1,53 @@
-// context/AuthContext.jsx
+// Context/AuthContext.jsx - FIXED VERSION FOR PRODUCTION
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import api from "../utils/api";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]       = useState(null);
-  const [loading, setLoading] = useState(true); // initial check
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false); // ← NEW: Track initialization
 
   // ── On mount — localStorage se user lo ──
   useEffect(() => {
+    console.log("[AuthContext] Initializing..."); // Debug log
+    
     const stored = localStorage.getItem("jc_user");
     if (stored) {
       try {
-        setUser(JSON.parse(stored));
-      } catch {
+        const userData = JSON.parse(stored);
+        console.log("[AuthContext] User found:", userData.username); // Debug log
+        setUser(userData);
+      } catch (err) {
+        console.error("[AuthContext] Parse error:", err);
         localStorage.removeItem("jc_user");
       }
+    } else {
+      console.log("[AuthContext] No user in storage"); // Debug log
     }
-    setLoading(false);
+    
+    // ✅ Wait a tick then mark as initialized
+    setTimeout(() => {
+      setLoading(false);
+      setInitialized(true);
+    }, 0);
   }, []);
 
   // ── Login ──
   const login = useCallback((userData) => {
+    console.log("[AuthContext] Login:", userData.username);
     setUser(userData);
     localStorage.setItem("jc_user", JSON.stringify(userData));
   }, []);
 
   // ── Logout ──
-const logout = useCallback(async () => {
-  localStorage.removeItem("jc_user");  // ← SABSE PEHLE
-  setUser(null);                        // ← React state clear
-  try {
-    await api.post("/auth/logout");     // ← Cookie clear
-  } catch {
-    // ignore
-  } finally {
-    window.location.href = "/login";    // ← Ab redirect
-  }
-}, []);
-
+  const logout = useCallback(async () => {
+    console.log("[AuthContext] Logout");
+    setUser(null);
+    localStorage.removeItem("jc_user");
+    window.location.href = "/login";
+  }, []);
 
   // ── Helpers ──
   const isOwner = user?.role === "owner";
@@ -48,15 +55,18 @@ const logout = useCallback(async () => {
   const isLoggedIn = !!user;
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      login,
-      logout,
-      isOwner,
-      isStaff,
-      isLoggedIn,
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        initialized,
+        login,
+        logout,
+        isOwner,
+        isStaff,
+        isLoggedIn,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
