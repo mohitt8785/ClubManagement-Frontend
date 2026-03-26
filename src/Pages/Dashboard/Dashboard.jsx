@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import Navbar from "../Components/Navbar/Navbar";
-import EntryForm from "../Components/EntryForm/EntryForm";
-import AllEntries from "../Components/AllEntries/AllEntries";
+import Navbar from "../../Components/Navbar/Navbar";
+import EntryForm from "../../Components/EntryForm/EntryForm";
+import AllEntries from "../../Components/AllEntries/AllEntries";
 import "./Dashboard.css";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/entries`;

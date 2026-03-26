@@ -1,0 +1,149 @@
+/* MonthlyReport.css */
+
+.mr-root { padding: 4px 0; }
+
+.mr-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.mr-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px; font-weight: 600;
+  color: #C9A84C; margin: 0 0 4px;
+}
+.mr-sub {
+  font-size: 11px; letter-spacing: 1px;
+  color: rgba(240,234,214,0.35);
+}
+.mr-selectors {
+  display: flex; gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.mr-select {
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 3px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px; color: #C9A84C;
+  outline: none; cursor: pointer;
+  box-sizing: border-box;
+}
+.mr-select option { background: #07070D; color: #F0EAD6; }
+
+.mr-loading {
+  text-align: center; padding: 60px;
+  color: rgba(201,168,76,0.3);
+  font-size: 12px; letter-spacing: 3px;
+}
+
+.mr-period { margin-bottom: 20px; }
+.mr-period-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; font-weight: 500;
+  color: rgba(201,168,76,0.6);
+  font-style: italic;
+}
+
+.mr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.mr-card {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 20px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(201,168,76,0.08);
+  border-radius: 4px;
+  min-width: 0;
+}
+.mr-card--gold  { background: rgba(201,168,76,0.05); border-color: rgba(201,168,76,0.2); }
+.mr-card--green { border-color: rgba(76,175,80,0.2); }
+.mr-card--blue  { border-color: rgba(33,150,243,0.2); }
+.mr-card--red   { border-color: rgba(244,67,54,0.2); }
+
+.mr-card-label {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(240,234,214,0.35);
+}
+.mr-card-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px; font-weight: 600;
+  color: #C9A84C;
+  word-break: break-all;
+}
+
+.mr-section { margin-top: 24px; }
+.mr-section-title {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(201,168,76,0.5);
+  margin-bottom: 12px;
+}
+
+/* ── Tablet (≤ 768px) ── */
+@media (max-width: 768px) {
+  .mr-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Revenue card full width */
+  .mr-card--gold { grid-column: 1 / -1; }
+
+  .mr-title { font-size: 24px; }
+}
+
+/* ── Mobile (≤ 520px) ── */
+@media (max-width: 520px) {
+  .mr-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .mr-selectors {
+    width: 100%;
+  }
+
+  .mr-select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mr-title { font-size: 22px; }
+
+  .mr-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .mr-card { padding: 16px; }
+
+  .mr-card-value { font-size: 26px; }
+
+  .mr-period-label { font-size: 16px; }
+}
+
+/* ── Tiny mobile (≤ 360px) ── */
+@media (max-width: 360px) {
+  .mr-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .mr-card { padding: 12px; }
+
+  .mr-card-value { font-size: 22px; }
+
+  .mr-card-label {
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+
+  .mr-section { margin-top: 18px; }
+}

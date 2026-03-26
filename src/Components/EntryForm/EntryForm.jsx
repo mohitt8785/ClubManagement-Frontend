@@ -8,24 +8,41 @@ const initialState = {
   name: "",
   surname: "",
   contactNo: "",
-  email: "",         // optional
-  dob: "",           // optional
-  entryTime: "",
-  reffBy: "",        // optional
-  refMemberNo: "",   // optional
-  paymentMode: "UPI",
-  dsAmount: "",      // optional
-  rsAmount: "",      // optional
-  totalAmount: "",   // optional (auto-calculated)
-  withCover: "",     // optional
-  withoutCover: "",  // optional
-  category: "Normal",// optional (default: Normal)
-  livePhoto: null,   // optional
-  idFront: null,     // optional
-  idBack: null,      // optional
-  remarks: "",       // optional
+  email: "",
+  dob: "",
+  entryTime: new Date().toTimeString().slice(0, 5),
+  reffBy: "",
+  pax: "",
+  paxCounts: { Pax: 0, "Stag Male": 0, "Stag Female": 0, Couple: 0 },
+  cashAmount: "",
+  upiAmount: "",
+  cardAmount: "",
+  totalAmount: "",
+  withCover: "",
+  withoutCover: "",
+  category: "Normal",
+  livePhoto: null,
+  idFront: null,
+  idBack: null,
+  remarks: "",
   tableNo: "",
 };
+
+function calcAge(dob) {
+  if (!dob) return null;
+  const today = new Date(),
+    birth = new Date(dob);
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age >= 0 ? age : null;
+}
+
+function formatDOB(dob) {
+  if (!dob) return "";
+  const [y, m, d] = dob.split("-");
+  return `${d}/${m}/${y}`;
+}
 
 export default function EntryForm({ onEntryAdded }) {
   const [form, setForm] = useState(initialState);
@@ -35,113 +52,100 @@ export default function EntryForm({ onEntryAdded }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [srNo, setSrNo] = useState(null);
-
-  // Webcam states
-  const [showWebcam, setShowWebcam] = useState(null); // 'live' | 'idFront' | 'idBack'
+  const [showWebcam, setShowWebcam] = useState(null);
   const [stream, setStream] = useState(null);
   const videoRef = useRef(null);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
+  const age = calcAge(form.dob);
+
+  const handleChange = (e) =>
+    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   const handleAmountChange = (e) => {
     const { name, value } = e.target;
     const updated = { ...form, [name]: value };
-    const ds = parseFloat(updated.dsAmount) || 0;
-    const rs = parseFloat(updated.rsAmount) || 0;
-    updated.totalAmount = (ds + rs).toString();
+    updated.totalAmount = (
+      (parseFloat(updated.cashAmount) || 0) +
+      (parseFloat(updated.upiAmount) || 0) +
+      (parseFloat(updated.cardAmount) || 0)
+    ).toString();
     setForm(updated);
   };
 
-  // ✅ Start Webcam
   const startWebcam = async (type) => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
+      const ms = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: type === "live" ? "user" : "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 800 },
+          height: { ideal: 800 },
         },
       });
-      setStream(mediaStream);
+      setStream(ms);
       setShowWebcam(type);
       setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-        }
+        if (videoRef.current) videoRef.current.srcObject = ms;
       }, 100);
-    } catch (err) {
-      console.error("Camera error:", err);
-      alert("Camera access denied or not available. Please allow camera permissions.");
+    } catch {
+      alert("Camera access denied or not available.");
     }
   };
 
-  // ✅ Stop Webcam
   const stopWebcam = () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      setStream(null);
-    }
+    if (stream) stream.getTracks().forEach((t) => t.stop());
+    setStream(null);
     setShowWebcam(null);
   };
 
-  // ✅ Capture Photo
   const capturePhoto = () => {
     if (!videoRef.current) return;
-
     const canvas = document.createElement("canvas");
-    const video = videoRef.current;
-    const passportWidth = 350;
-    const passportHeight = 450;
-    canvas.width = passportWidth;
-    canvas.height = passportHeight;
-    const ctx = canvas.getContext("2d");
+    const v = videoRef.current;
 
-    const scale = Math.min(
-      passportWidth / video.videoWidth,
-      passportHeight / video.videoHeight
-    );
-    const scaledWidth = video.videoWidth * scale;
-    const scaledHeight = video.videoHeight * scale;
-    const x = (passportWidth - scaledWidth) / 2;
-    const y = (passportHeight - scaledHeight) / 2;
+    // ✅ SAME SIZE FOR ALL PHOTOS: 400x400 square
+    canvas.width = 400;
+    canvas.height = 400;
+
+    const ctx = canvas.getContext("2d");
+    const scale = Math.min(400 / v.videoWidth, 400 / v.videoHeight);
+    const sw = v.videoWidth * scale,
+      sh = v.videoHeight * scale;
 
     ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, passportWidth, passportHeight);
-    ctx.drawImage(video, x, y, scaledWidth, scaledHeight);
+    ctx.fillRect(0, 0, 400, 400);
+    ctx.drawImage(v, (400 - sw) / 2, (400 - sh) / 2, sw, sh);
 
-    canvas.toBlob((blob) => {
-      const file = new File([blob], `${showWebcam}_photo.jpg`, {
-        type: "image/jpeg",
-      });
-      if (showWebcam === "live") {
-        setForm((prev) => ({ ...prev, livePhoto: file }));
-        setLivePhotoPreview(URL.createObjectURL(file));
-      } else if (showWebcam === "idFront") {
-        setForm((prev) => ({ ...prev, idFront: file }));
-        setIdFrontPreview(URL.createObjectURL(file));
-      } else if (showWebcam === "idBack") {
-        setForm((prev) => ({ ...prev, idBack: file }));
-        setIdBackPreview(URL.createObjectURL(file));
-      }
-      stopWebcam();
-    }, "image/jpeg", 0.9);
+    canvas.toBlob(
+      (blob) => {
+        const file = new File([blob], `${showWebcam}_photo.jpg`, {
+          type: "image/jpeg",
+        });
+        if (showWebcam === "live") {
+          setForm((p) => ({ ...p, livePhoto: file }));
+          setLivePhotoPreview(URL.createObjectURL(file));
+        } else if (showWebcam === "idFront") {
+          setForm((p) => ({ ...p, idFront: file }));
+          setIdFrontPreview(URL.createObjectURL(file));
+        } else if (showWebcam === "idBack") {
+          setForm((p) => ({ ...p, idBack: file }));
+          setIdBackPreview(URL.createObjectURL(file));
+        }
+        stopWebcam();
+      },
+      "image/jpeg",
+      0.9,
+    );
   };
 
   const removePhoto = (type) => {
     if (type === "live") {
-      setForm((prev) => ({ ...prev, livePhoto: null }));
+      setForm((p) => ({ ...p, livePhoto: null }));
       setLivePhotoPreview(null);
     } else if (type === "idFront") {
-      setForm((prev) => ({ ...prev, idFront: null }));
+      setForm((p) => ({ ...p, idFront: null }));
       setIdFrontPreview(null);
     } else if (type === "idBack") {
-      setForm((prev) => ({ ...prev, idBack: null }));
+      setForm((p) => ({ ...p, idBack: null }));
       setIdBackPreview(null);
     }
   };
@@ -152,35 +156,39 @@ export default function EntryForm({ onEntryAdded }) {
     setMessage({ type: "", text: "" });
 
     try {
-      const numericFields = new Set([
-        "dsAmount",
-        "rsAmount",
-        "totalAmount",
-        "withCover",
-        "withoutCover",
-      ]);
       const formData = new FormData();
-
       Object.keys(form).forEach((key) => {
-  if (key === "livePhoto" && form[key]) {
-    formData.append("livePhoto", form[key]);
-  } else if (key === "idFront" && form[key]) {
-    formData.append("idFront", form[key]);
-  } else if (key === "idBack" && form[key]) {
-    formData.append("idBack", form[key]);
-  } else if (key === "tableNo") {
-    // ✅ Bilkul mat bhejo agar empty hai
-    if (form[key] !== "" && form[key] !== null && form[key] !== undefined) {
-      formData.append("tableNo", Number(form[key]));
-    }
-  } else if (key === "livePhoto" || key === "idFront" || key === "idBack") {
-    // skip null photos
-  } else if (["dsAmount","rsAmount","totalAmount","withCover","withoutCover"].includes(key)) {
-    formData.append(key, form[key] === "" ? "0" : form[key]);
-  } else {
-    formData.append(key, form[key] ?? "");
-  }
-});
+        if (["livePhoto", "idFront", "idBack"].includes(key)) {
+          if (form[key]) formData.append(key, form[key]);
+        } else if (key === "tableNo") {
+          if (form[key] !== "" && form[key] != null)
+            formData.append("tableNo", Number(form[key]));
+        }
+        else if (key === "pax") {
+
+          if (form[key]) formData.append(key, form[key]);
+        }
+
+
+
+        else if (
+          [
+            "cashAmount",
+            "upiAmount",
+            "cardAmount",
+            "totalAmount",
+            "withCover",
+            "withoutCover",
+          ].includes(key)
+        ) {
+          formData.append(key, form[key] === "" ? "0" : form[key]);
+        } else if (key === "paxCounts") {
+          formData.append("paxCounts", JSON.stringify(form.paxCounts));
+        } else {
+          formData.append(key, form[key] ?? "");
+        }
+      });
+
       const res = await axios.post(API_URL, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -197,12 +205,12 @@ export default function EntryForm({ onEntryAdded }) {
     } catch (error) {
       const data = error.response?.data;
       const fieldErrors = data?.errors;
-      const errorMsg = fieldErrors?.length
-        ? `${data.message}: ${fieldErrors
-          .map((e) => `${e.field} — ${e.message}`)
-          .join(", ")}`
-        : data?.message || "Server error";
-      setMessage({ type: "error", text: errorMsg });
+      setMessage({
+        type: "error",
+        text: fieldErrors?.length
+          ? `${data.message}: ${fieldErrors.map((e) => `${e.field} — ${e.message}`).join(", ")}`
+          : data?.message || "Server error",
+      });
     } finally {
       setLoading(false);
     }
@@ -218,390 +226,522 @@ export default function EntryForm({ onEntryAdded }) {
     stopWebcam();
   };
 
-  useEffect(() => {
-    return () => {
-      if (stream) stream.getTracks().forEach((track) => track.stop());
-    };
-  }, [stream]);
+  useEffect(
+    () => () => {
+      if (stream) stream.getTracks().forEach((t) => t.stop());
+    },
+    [stream],
+  );
+
+  const paxOptions = [
+    { key: "Pax", icon: "👥", label: "Pax", cls: "pax" },
+    { key: "Stag Male", icon: "👨", label: "Stag Male", cls: "stag-male" },
+    {
+      key: "Stag Female",
+      icon: "👩",
+      label: "Stag Female",
+      cls: "stag-female",
+    },
+    { key: "Couple", icon: "💑", label: "Couple", cls: "couple" },
+  ];
 
   return (
-    <div className="entry-form-wrapper">
-      <div className="form-header">
-        <div className="members-badge">★ MEMBERS ONLY</div>
-        <h1 className="form-title">Club Entry Form</h1>
-        <div className="title-line" />
+    <div className="ef-wrapper">
+      <div className="ef-header">
+        <div className="ef-badge">★ MEMBERS ONLY ★</div>
+        <h1 className="ef-title">Club Entry Form</h1>
+        <div className="ef-title-line" />
       </div>
 
-      <div className="form-container">
-        <div className="sr-row">
-          <label className="sr-label">SR. NO.</label>
-          <div className="sr-display">{srNo || "—"}</div>
-          <div className="sr-auto">Auto-Generated On Save</div>
+      <div className="ef-card">
+        <div className="ef-sr-row">
+          <span className="ef-sr-label">SR. NO.</span>
+          <div className="ef-sr-box">{srNo || "—"}</div>
+          <span className="ef-sr-auto">Auto-Generated On Save</span>
         </div>
 
         {message.text && (
-          <div className={`message ${message.type}`}>{message.text}</div>
+          <div className={`ef-msg ef-msg--${message.type}`}>{message.text}</div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-grid">
+          <div className="ef-body">
+            {/* ══ FORM SECTIONS (left) ══ */}
+            <div className="ef-col ef-col--sections">
+              <div className="ef-row2">
+                <Sec n="1" t="Personal Information">
+                  <div className="ef-row2">
+                    <Inp
+                      label="Name"
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      placeholder="First Name"
+                      required
+                    />
+                    <Inp
+                      label="Surname"
+                      name="surname"
+                      value={form.surname}
+                      onChange={handleChange}
+                      placeholder="Last Name"
+                      required
+                    />
+                  </div>
+                </Sec>
 
-            {/* ══ LEFT COLUMN ══ */}
-            <div className="form-grid-col">
+                <Sec n="2" t="Contact Details">
+                  <div className="ef-row2">
+                    <Inp
+                      label="Contact No."
+                      name="contactNo"
+                      value={form.contactNo}
+                      onChange={handleChange}
+                      placeholder="+91 00000 00000"
+                      required
+                      maxLength={10}
+                    />
+                    <Inp
+                      label="Email"
+                      name="email"
+                      type="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      placeholder="example@email.com"
+                    />
+                  </div>
+                  <div className="ef-row2">
+                    <div className="ef-field">
+                      <label className="ef-label">
+                        Date of Birth
+                        {/* {age !== null && (
+                          <span className="ef-age-inline"> · {age} yrs</span>
+                        )} */}
+                      </label>
+                      <div className="ef-dob-wrap">
+                        <input
+                          className="ef-input"
+                          name="dob"
+                          type="date"
+                          value={form.dob}
+                          onChange={handleChange}
+                          style={{
+                            paddingRight: age !== null ? "35px" : "12px",
+                          }}
+                        />
+                        {age !== null && (
+                          <span className="ef-age-pill">{age}</span>
+                        )}
+                      </div>
+                      {form.dob && (
+                        <span className="ef-dob-hint">
+                          {formatDOB(form.dob)} · Age {age}
+                        </span>
+                      )}
+                    </div>
 
-              {/* ── 1. Personal Information ── */}
-              <Section number="1" title="Personal Information">
-                <div className="form-row">
-                  {/* REQUIRED */}
-                  <Input
-                    label="Name"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    placeholder="First Name"
-                    required
-                  />
-                  {/* REQUIRED */}
-                  <Input
-                    label="Surname"
-                    name="surname"
-                    value={form.surname}
-                    onChange={handleChange}
-                    placeholder="Last Name"
-                    required
-                  />
-                </div>
-              </Section>
 
-              {/* ── 2. Contact Details ── */}
-              <Section number="2" title="Contact Details">
-                <div className="form-row">
-                  {/* REQUIRED */}
-                  <Input
-                    label="Contact No."
-                    name="contactNo"
-                    value={form.contactNo}
-                    onChange={handleChange}
-                    placeholder="+91 00000 00000"
-                    required
-                    maxLength={10}
-                  />
-                  {/* OPTIONAL */}
-                  <Input
-                    label="Email"
-                    name="email"
-                    type="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    placeholder="example@email.com"
-                  />
-                </div>
-                <div className="form-row" style={{ marginTop: 0 }}>
-                  {/* OPTIONAL */}
-                  <Input
-                    label="Date of Birth"
-                    name="dob"
-                    type="date"
-                    value={form.dob}
-                    onChange={handleChange}
-                    placeholder=" Select DOB"
-                  />
-                  {/* REQUIRED */}
-                  <Input
-                    label="Entry Time"
-                    name="entryTime"
-                    type="time"
-                    value={form.entryTime}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </Section>
+                    <div className="ef-field">
+                      <label className="ef-label">Entry Time <span className="ef-req">*</span></label>
+                      <div className="ef-time-input-wrap">
+                        {/* Hidden actual time input (24-hour format) */}
+                        <input
+                          className="ef-time-input-hidden"
+                          name="entryTime"
+                          type="time"
+                          value={form.entryTime}
+                          onChange={handleChange}
+                          required
+                          id="entryTimeInput"
+                        />
 
-              {/* ── 3. Reference (all optional) ── */}
-              <Section number="3" title="Reference">
-                <div className="form-row">
-                  <Input
+                        {/* Custom display (12-hour format) */}
+                        <div
+                          className="ef-time-display"
+                          onClick={() => document.getElementById('entryTimeInput').showPicker()}
+                        >
+                          {form.entryTime ? (() => {
+                            const [h, m] = form.entryTime.split(":");
+                            const hour = parseInt(h);
+                            let h12 = hour % 12;
+                            if (h12 === 0) h12 = 12;
+                            const ampm = hour >= 12 ? "PM" : "AM";
+                            return `${h12}:${m} ${ampm}`;
+                          })() : "Select Time"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Sec>
+              </div>
+
+              <div className="ef-row2">
+                <Sec n="3" t="Reference">
+                  <Inp
                     label="Referred By"
                     name="reffBy"
                     value={form.reffBy}
                     onChange={handleChange}
                     placeholder="Referrer Name"
                   />
-                  <Input
-                    label="Ref. Member No."
-                    name="refMemberNo"
-                    value={form.refMemberNo}
-                    onChange={handleChange}
-                    placeholder="Member ID "
-                  />
-                </div>
-              </Section>
+                </Sec>
 
-              {/* ── 7. Remarks (optional) ── */}
-              <Section number="7" title="Remarks">
-                <div className="input-group">
-                  <label className="input-label">Notes / Special Instructions</label>
-                  <textarea
-                    name="remarks"
-                    value={form.remarks}
-                    onChange={handleChange}
-                    placeholder="Enter any remarks or special instructions..."
-                    className="textarea-input"
-                  />
-                </div>
-              </Section>
+                <Sec n="4" t="Pax Type">
+                  <div className="ef-pax-grid">
+                    {paxOptions.map((p) => {
+                      const isSelected = form.paxCounts[p.key] > 0;
 
+                      return (
+                        <div
+                          key={p.key}
+                          className={`ef-pax-btn${isSelected ? ` ef-pax--${p.cls}` : ""}`}
+                          onClick={() => {
+                            setForm((f) => ({
+                              ...f,
+                              paxCounts: {
+                                ...f.paxCounts,
+                                [p.key]: f.paxCounts[p.key] === 0 ? 1 : f.paxCounts[p.key],
+                              },
+                            }));
+                          }}
+                        >
+                          <span className="ef-pax-emoji">{p.icon}</span>
+                          <span className="ef-pax-lbl">{p.label}</span>
+
+                          {isSelected && (
+                            <div
+                              className="ef-pax-num-wrap"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                type="button"
+                                className="ef-pax-dec"
+                                onClick={() =>
+                                  setForm((f) => ({
+                                    ...f,
+                                    paxCounts: {
+                                      ...f.paxCounts,
+                                      [p.key]: Math.max(0, f.paxCounts[p.key] - 1),
+                                    },
+                                  }))
+                                }
+                              >
+                                −
+                              </button>
+
+                              <span className="ef-pax-count">
+                                {form.paxCounts[p.key]}
+                              </span>
+
+                              <button
+                                type="button"
+                                className="ef-pax-inc"
+                                onClick={() =>
+                                  setForm((f) => ({
+                                    ...f,
+                                    paxCounts: {
+                                      ...f.paxCounts,
+                                      [p.key]: f.paxCounts[p.key] + 1,
+                                    },
+                                  }))
+                                }
+                              >
+                                +
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="ef-pax-summary">
+                    <span className="ef-pax-summary-item">
+                      <span className="ef-pax-summary-icon">👥</span>
+                      <span className="ef-pax-summary-label">Pax:</span>
+                      <span className="ef-pax-summary-value">{form.paxCounts["Pax"]}</span>
+                    </span>
+
+                    {/* <span className="ef-pax-summary-divider">|</span> */}
+
+                    <span className="ef-pax-summary-item">
+                      <span className="ef-pax-summary-icon">👨</span>
+                      <span className="ef-pax-summary-label">Male:</span>
+                      <span className="ef-pax-summary-value">{form.paxCounts["Stag Male"]}</span>
+                    </span>
+
+                    {/* <span className="ef-pax-summary-divider">|</span> */}
+
+                    <span className="ef-pax-summary-item">
+                      <span className="ef-pax-summary-icon">👩</span>
+                      <span className="ef-pax-summary-label">Female:</span>
+                      <span className="ef-pax-summary-value">{form.paxCounts["Stag Female"]}</span>
+                    </span>
+
+                    {/* <span className="ef-pax-summary-divider">|</span> */}
+
+                    <span className="ef-pax-summary-item">
+                      <span className="ef-pax-summary-icon">💑</span>
+                      <span className="ef-pax-summary-label">Couple:</span>
+                      <span className="ef-pax-summary-value">{form.paxCounts["Couple"]}</span>
+                    </span>
+                  </div>
+                  {/* ✅ NEW: TOTAL PEOPLE COUNTER */}
+                  <div className="ef-pax-total">
+                    <span className="ef-pax-total-icon">👤</span>
+                    <span className="ef-pax-total-label">Total People:</span>
+                    <span className="ef-pax-total-value">
+                      {
+                        form.paxCounts["Pax"] +
+                        form.paxCounts["Stag Male"] +
+                        form.paxCounts["Stag Female"] +
+                        (form.paxCounts["Couple"] * 2)  // ✅ Couple × 2 = people
+                      }
+                    </span>
+                  </div>
+
+
+                </Sec>
+              </div>
+
+              <Sec n="5" t="Payment" req>
+                <div className="ef-pay-grid">
+                  <div className="ef-pay-card ef-pay--cash">
+                    <div className="ef-pay-top">
+                      <span className="ef-pay-emoji">💵</span>
+                      <span className="ef-pay-name">Cash</span>
+                    </div>
+                    <div className="ef-pay-inp-wrap">
+                      <span className="ef-pay-sym">₹</span>
+                      <input
+                        className="ef-pay-inp"
+                        name="cashAmount"
+                        type="number"
+                        value={form.cashAmount}
+                        onChange={handleAmountChange}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  <div className="ef-pay-card ef-pay--upi">
+                    <div className="ef-pay-top">
+                      <span className="ef-pay-emoji">📱</span>
+                      <span className="ef-pay-name">UPI</span>
+                    </div>
+                    <div className="ef-pay-inp-wrap">
+                      <span className="ef-pay-sym">₹</span>
+                      <input
+                        className="ef-pay-inp"
+                        name="upiAmount"
+                        type="number"
+                        value={form.upiAmount}
+                        onChange={handleAmountChange}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  <div className="ef-pay-card ef-pay--card">
+                    <div className="ef-pay-top">
+                      <span className="ef-pay-emoji">💳</span>
+                      <span className="ef-pay-name">Card</span>
+                    </div>
+                    <div className="ef-pay-inp-wrap">
+                      <span className="ef-pay-sym">₹</span>
+                      <input
+                        className="ef-pay-inp"
+                        name="cardAmount"
+                        type="number"
+                        value={form.cardAmount}
+                        onChange={handleAmountChange}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="ef-total">
+                  <div className="ef-total-l">
+                    <span className="ef-total-star">★</span>
+                    <span className="ef-total-lbl">Total Amount</span>
+                  </div>
+                  <div className="ef-total-r">
+                    <span className="ef-total-sym">₹</span>
+                    <span className="ef-total-val">
+                      {(parseFloat(form.totalAmount) || 0).toLocaleString(
+                        "en-IN",
+                      )}
+                    </span>
+                  </div>
+                </div>
+                <div className="ef-cover-grid">
+                  <div className="ef-cover-card">
+                    <label className="ef-cover-lbl">With Cover</label>
+                    <input
+                      className="ef-cover-inp"
+                      name="withCover"
+                      type="number"
+                      value={form.withCover}
+                      onChange={handleChange}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="ef-cover-card">
+                    <label className="ef-cover-lbl">Without Cover</label>
+                    <input
+                      className="ef-cover-inp"
+                      name="withoutCover"
+                      type="number"
+                      value={form.withoutCover}
+                      onChange={handleChange}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+              </Sec>
+
+              <div className="ef-row2">
+                <Sec n="6" t="Member Category">
+                  <div className="ef-cat-grid">
+                    {[
+                      ["Normal", "normal", "⭐"],
+                      ["VIP", "vip", "💎"],
+                      ["VVIP", "vvip", "👑"],
+                    ].map(([cat, cls, icon]) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        className={`ef-cat-btn ef-cat--${cls}${form.category === cat ? " ef-cat--active" : ""}`}
+                        onClick={() => setForm({ ...form, category: cat })}
+                      >
+                        <span className="ef-cat-icon">{icon}</span>
+                        <span>{cat}</span>
+                      </button>
+                    ))}
+                  </div>
+                </Sec>
+
+                <Sec n="7" t="Table & Remarks">
+                  <div className="ef-table-row">
+                    <div className="ef-field" style={{ flex: 1 }}>
+                      <label className="ef-label">Table No.</label>
+                      <input
+                        className="ef-input"
+                        name="tableNo"
+                        type="number"
+                        value={form.tableNo}
+                        onChange={handleChange}
+                        placeholder="e.g. 12"
+                        style={{
+                          fontSize: 18,
+                          fontWeight: 700,
+                          letterSpacing: 2,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="ef-field" style={{ marginTop: 12 }}>
+                    <label className="ef-label">Remarks</label>
+                    <textarea
+                      className="ef-textarea"
+                      name="remarks"
+                      value={form.remarks}
+                      onChange={handleChange}
+                      placeholder="Enter any remarks or special instructions..."
+                      style={{ minHeight: 70 }}
+                    />
+                  </div>
+                </Sec>
+              </div>
             </div>
 
-            {/* ══ RIGHT COLUMN ══ */}
-            <div className="form-grid-col">
+            {/* ══ PHOTO PANEL (right, sticky) - ALL SAME SIZE ══ */}
+            <div className="ef-col ef-col--photo">
+              {/* ✅ LIVE PHOTO - 400x400 */}
+              <PhotoBox
+                title="📸 Client Live"
+                preview={livePhotoPreview}
+                onCapture={() => startWebcam("live")}
+                onRetake={() => startWebcam("live")}
+                onRemove={() => removePhoto("live")}
+              />
 
-              {/* ── 5. Payment ── */}
-              <Section number="5" title="Payment" required>
-                {/* paymentMode is REQUIRED — defaults to UPI so always set */}
-                <div className="payment-methods">
-                  <PaymentButton
-                    icon="📱"
-                    label="UPI"
-                    active={form.paymentMode === "UPI"}
-                    onClick={() => setForm({ ...form, paymentMode: "UPI" })}
-                  />
-                  <PaymentButton
-                    icon="💵"
-                    label="Cash"
-                    active={form.paymentMode === "Cash"}
-                    onClick={() => setForm({ ...form, paymentMode: "Cash" })}
-                  />
-                  <PaymentButton
-                    icon="💳"
-                    label="Card"
-                    active={form.paymentMode === "CC"}
-                    onClick={() => setForm({ ...form, paymentMode: "CC" })}
-                  />
-                </div>
+              {/* ✅ ID FRONT - 400x400 */}
+              <PhotoBox
+                title="🪪 ID Front"
+                preview={idFrontPreview}
+                onCapture={() => startWebcam("idFront")}
+                onRetake={() => startWebcam("idFront")}
+                onRemove={() => removePhoto("idFront")}
+              />
 
-                {/* Amounts are OPTIONAL */}
-                <div className="amount-grid">
-                  <AmountInput
-                    label="DS Amount"
-                    name="dsAmount"
-                    value={form.dsAmount}
-                    onChange={handleAmountChange}
-                  />
-                  <AmountInput
-                    label="RS Amount"
-                    name="rsAmount"
-                    value={form.rsAmount}
-                    onChange={handleAmountChange}
-                  />
-                  <AmountInput
-                    label="Total"
-                    name="totalAmount"
-                    value={form.totalAmount}
-                    readOnly
-                    highlight
-                  />
-                </div>
-
-                {/* Cover counts are OPTIONAL */}
-                <div className="cover-row">
-                  <AmountInput
-                    label="With Cover"
-                    name="withCover"
-                    value={form.withCover}
-                    onChange={handleChange}
-                  />
-                  <AmountInput
-                    label="Without Cover"
-                    name="withoutCover"
-                    value={form.withoutCover}
-                    onChange={handleChange}
-                  />
-                </div>
-              </Section>
-
-              {/* ── 6. Category & Photos (all optional) ── */}
-              <Section number="6" title="Member Category & Photos (Optional)">
-                {/* category defaults to "Normal" — optional */}
-                <div className="category-buttons">
-                  <CategoryButton
-                    label="Normal"
-                    active={form.category === "Normal"}
-                    onClick={() => setForm({ ...form, category: "Normal" })}
-                    color="normal"
-                  />
-                  <CategoryButton
-                    label="VIP"
-                    active={form.category === "VIP"}
-                    onClick={() => setForm({ ...form, category: "VIP" })}
-                    color="vip"
-                  />
-                  <CategoryButton
-                    label="VVIP"
-                    active={form.category === "VVIP"}
-                    onClick={() => setForm({ ...form, category: "VVIP" })}
-                    color="vvip"
-                  />
-                </div>
-
-                {/* 📸 CLIENT LIVE PHOTO — optional */}
-                <div className="photo-capture-item">
-                  <label className="photo-capture-label">
-                    <span className="photo-icon">📸</span>
-                    Client Live Photo
-                  </label>
-                  {livePhotoPreview ? (
-                    <div className="photo-preview-box">
-                      <img src={livePhotoPreview} alt="Live" className="preview-img" />
-                      <button
-                        type="button"
-                        onClick={() => removePhoto("live")}
-                        className="remove-btn"
-                      >
-                        ✕ Remove
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => startWebcam("live")}
-                      className="camera-capture-btn"
-                    >
-                      📹 Open Camera
-                    </button>
-                  )}
-                </div>
-
-                {/* 🪪 ID PROOF — optional */}
-                <div className="photo-capture-item">
-                  <label className="photo-capture-label">
-                    <span className="photo-icon">🪪</span>
-                    ID Proof (Aadhar / PAN)
-                  </label>
-
-                  {/* ID Front */}
-                  <div className="id-card-row">
-                    <label className="id-side-label">Front Side</label>
-                    {idFrontPreview ? (
-                      <div className="photo-preview-box">
-                        <img
-                          src={idFrontPreview}
-                          alt="ID Front"
-                          className="preview-img-id"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removePhoto("idFront")}
-                          className="remove-btn-small"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => startWebcam("idFront")}
-                        className="camera-capture-btn-small"
-                      >
-                        📷 Capture Front
-                      </button>
-                    )}
-                  </div>
-
-                  {/* ID Back */}
-                  <div className="id-card-row">
-                    <label className="id-side-label">Back Side</label>
-                    {idBackPreview ? (
-                      <div className="photo-preview-box">
-                        <img
-                          src={idBackPreview}
-                          alt="ID Back"
-                          className="preview-img-id"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removePhoto("idBack")}
-                          className="remove-btn-small"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => startWebcam("idBack")}
-                        className="camera-capture-btn-small"
-                      >
-                        📷 Capture Back
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </Section>
-
-              {/* ── 8. Table Assignment — REQUIRED ── */}
-              <Section number="8" title="Table Assignment">
-                <div style={{ maxWidth: 160 }}>
-                  <Input
-                    label="Table No."
-                    name="tableNo"
-                    type="number"
-                    value={form.tableNo}
-                    onChange={handleChange}
-                    placeholder="e.g. 12"
-
-
-                  />
-                </div>
-              </Section>
-
+              {/* ✅ ID BACK - 400x400 */}
+              <PhotoBox
+                title="🪪 ID Back"
+                preview={idBackPreview}
+                onCapture={() => startWebcam("idBack")}
+                onRetake={() => startWebcam("idBack")}
+                onRemove={() => removePhoto("idBack")}
+              />
             </div>
           </div>
 
-          <div className="form-actions">
-            <button type="button" onClick={handleReset} className="btn-secondary">
+          <div className="ef-actions">
+            <button
+              type="button"
+              onClick={handleReset}
+              className="ef-btn-reset"
+            >
               Reset
             </button>
-            <button type="submit" disabled={loading} className="btn-primary">
+            <button type="submit" disabled={loading} className="ef-btn-save">
               {loading ? "Saving…" : "Save Entry ★"}
             </button>
           </div>
         </form>
       </div>
 
-      <div className="form-footer">Club Entry Management System · ★</div>
+      <div className="ef-footer">Jaguar Club · Entry Management System · ★</div>
 
-      {/* 📹 CAMERA MODAL */}
+      {/* WEBCAM MODAL */}
       {showWebcam && (
-        <div className="webcam-modal-overlay" onClick={stopWebcam}>
-          <div className="webcam-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="webcam-header">
+        <div className="ef-webcam-overlay" onClick={stopWebcam}>
+          <div className="ef-webcam-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ef-webcam-head">
               <h3>
                 📸{" "}
                 {showWebcam === "live"
                   ? "Client Live Photo"
                   : showWebcam === "idFront"
-                    ? "ID Front Side"
-                    : "ID Back Side"}
+                    ? "ID — Front Side"
+                    : "ID — Back Side"}
               </h3>
-              <button onClick={stopWebcam} className="webcam-close">
+              <button
+                type="button"
+                onClick={stopWebcam}
+                className="ef-webcam-close"
+              >
                 ✕
               </button>
             </div>
-            <div className="webcam-body">
+            <div className="ef-webcam-body">
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
-                className="webcam-video"
+                className="ef-webcam-video"
               />
             </div>
-            <div className="webcam-footer">
-              <button onClick={stopWebcam} className="btn-cancel">
+            <div className="ef-webcam-foot">
+              <button
+                type="button"
+                onClick={stopWebcam}
+                className="ef-wbtn ef-wbtn--cancel"
+              >
                 Cancel
               </button>
-              <button onClick={capturePhoto} className="btn-capture">
+              <button
+                type="button"
+                onClick={capturePhoto}
+                className="ef-wbtn ef-wbtn--capture"
+              >
                 📷 Capture Photo
               </button>
             </div>
@@ -612,17 +752,53 @@ export default function EntryForm({ onEntryAdded }) {
   );
 }
 
-// ══════════════════════════════════════════════════════
-// SUB-COMPONENTS
-// ══════════════════════════════════════════════════════
-
-function Section({ number, title, required, children }) {
+// ✅ REUSABLE PHOTO BOX COMPONENT - ALL SAME SIZE
+function PhotoBox({ title, preview, onCapture, onRetake, onRemove }) {
   return (
-    <div className="form-section">
-      <div className="section-header">
-        <span className="section-number">{number}</span>
-        <span className="section-title">
-          {title} {required && <span className="required">*</span>}
+    <div className="ef-photo-box">
+      <div className="ef-photo-box-head">{title}</div>
+      <div
+        className={`ef-photo-square ${preview ? "captured" : ""}`}
+        onClick={!preview ? onCapture : undefined}
+      >
+        {preview ? (
+          <>
+            <img src={preview} alt={title} className="ef-photo-img" />
+            <div className="ef-photo-badge">✓</div>
+          </>
+        ) : (
+          <div className="ef-photo-empty">
+            <div className="ef-photo-cam-icon">📷</div>
+            <p className="ef-photo-tap">Tap to Capture</p>
+          </div>
+        )}
+      </div>
+      {preview ? (
+        <div className="ef-photo-btns">
+          <button type="button" className="ef-photo-retake" onClick={onRetake}>
+            🔄 Retake
+          </button>
+          <button type="button" className="ef-photo-del" onClick={onRemove}>
+            ✕
+          </button>
+        </div>
+      ) : (
+        <button type="button" className="ef-photo-cap-btn" onClick={onCapture}>
+          📹 Open Camera
+        </button>
+      )}
+    </div>
+  );
+}
+
+function Sec({ n, t, req, children }) {
+  return (
+    <div className="ef-section">
+      <div className="ef-sec-head">
+        <span className="ef-sec-num">{n}</span>
+        <span className="ef-sec-title">
+          {t}
+          {req && <span className="ef-req"> *</span>}
         </span>
       </div>
       {children}
@@ -630,53 +806,14 @@ function Section({ number, title, required, children }) {
   );
 }
 
-function Input({ label, required, ...props }) {
+function Inp({ label, required, ...props }) {
   return (
-    <div className="input-group">
-      <label className="input-label">
-        {label}{required && <span className="required">*</span>}
-
+    <div className="ef-field">
+      <label className="ef-label">
+        {label}
+        {required && <span className="ef-req"> *</span>}
       </label>
-      <input className="text-input" required={required} {...props} />
+      <input className="ef-input" required={required} {...props} />
     </div>
-  );
-}
-
-function AmountInput({ label, highlight, ...props }) {
-  return (
-    <div className="amount-box">
-      <label className="amount-label">{label}</label>
-      <input
-        className={`amount-value${highlight ? " highlight" : ""}`}
-        placeholder="₹ 0"
-        type="number"
-        {...props}
-      />
-    </div>
-  );
-}
-
-function PaymentButton({ icon, label, active, onClick }) {
-  return (
-    <button
-      type="button"
-      className={`payment-btn${active ? " active" : ""}`}
-      onClick={onClick}
-    >
-      <span className="payment-icon">{icon}</span>
-      <span>{label}</span>
-    </button>
-  );
-}
-
-function CategoryButton({ label, active, onClick, color = "normal" }) {
-  return (
-    <button
-      type="button"
-      className={`category-btn${active ? " active" : ""} ${color}`}
-      onClick={onClick}
-    >
-      {label}
-    </button>
   );
 }

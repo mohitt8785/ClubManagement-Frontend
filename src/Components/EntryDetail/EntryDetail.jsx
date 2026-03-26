@@ -6,14 +6,12 @@ import "./EntryDetail.css";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/entries`;
 
-
 export default function EntryDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [entry, setEntry] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ useCallback lagaya — stable function
   const fetchEntry = useCallback(async () => {
     try {
       const res = await axios.get(`${API_URL}/${id}`);
@@ -27,8 +25,44 @@ export default function EntryDetail() {
 
   useEffect(() => {
     if (id) fetchEntry();
-  }, [id, fetchEntry]); // ✅ fetchEntry dependency mein
+  }, [id, fetchEntry]);
 
+  // ✅ Helper: Get paxCounts from entry (handles old & new format)
+  const getPaxCounts = (entry) => {
+    if (entry.paxCounts && typeof entry.paxCounts === 'object') {
+      return entry.paxCounts;
+    }
+    if (entry.pax) {
+      const counts = { "Pax": 0, "Stag Male": 0, "Stag Female": 0, "Couple": 0 };
+      counts[entry.pax] = entry.paxCount || 1;
+      return counts;
+    }
+    return { "Pax": 1, "Stag Male": 0, "Stag Female": 0, "Couple": 0 };
+  };
+
+  // ✅ Helper: Calculate total people
+  const getTotalPeople = (entry) => {
+    const paxCounts = getPaxCounts(entry);
+    return (
+      (paxCounts.Pax || 0) +
+      (paxCounts["Stag Male"] || 0) +
+      (paxCounts["Stag Female"] || 0) +
+      ((paxCounts.Couple || 0) * 2)
+    );
+  };
+
+  // ✅ Helper: Format time to 12-hour
+  const format12Hour = (time) => {
+    if (!time) return "—";
+    const [h, m] = time.split(":");
+    const hour = parseInt(h);
+    let h12 = hour % 12;
+    if (h12 === 0) h12 = 12;
+    const ampm = hour >= 12 ? "PM" : "AM";
+    return `${h12}:${m} ${ampm}`;
+  };
+
+  // ── PDF Download ──────────────────────────────────────────────
   const handleDownloadPDF = async () => {
     if (!entry) return;
 
@@ -76,7 +110,7 @@ export default function EntryDetail() {
       y += lines.length * 6 + 2;
     };
 
-    // ── PAGE 1 ──
+    // ── PAGE 1 ──────────────────────────────────────────────────
     doc.setFillColor(201, 168, 76);
     doc.rect(0, 0, 210, 40, "F");
     doc.setTextColor(7, 7, 13);
@@ -87,7 +121,6 @@ export default function EntryDetail() {
     doc.setFontSize(10);
     doc.text("Guest Entry Record", 105, 28, { align: "center" });
     doc.setFontSize(9);
-    // ✅ tableNo null check
     doc.text(
       `SR #${entry.srNo}  •  Table ${entry.tableNo ?? "N/A"}  •  ${entry.category}`,
       105, 35, { align: "center" }
@@ -106,9 +139,7 @@ export default function EntryDetail() {
         doc.setTextColor(120);
         doc.text(`${entry.name} ${entry.surname}`, x + size / 2, yImg + size + 5, { align: "center" });
       }
-    } catch (e) {
-      // silent fail
-    }
+    } catch (e) { /* silent */ }
 
     doc.setTextColor(0);
 
@@ -120,16 +151,32 @@ export default function EntryDetail() {
     y += 3;
 
     section("ENTRY DETAILS");
-    line("Time:", entry.entryTime);
+    line("Time:", format12Hour(entry.entryTime));
     line("Date:", new Date(entry.createdAt).toLocaleDateString("en-IN"));
-    line("Table:", entry.tableNo ?? "N/A"); // ✅ null check
+    line("Table:", entry.tableNo ?? "N/A");
     line("Category:", entry.category);
     y += 3;
 
+    // ✅ Pax Details
+    section("PAX DETAILS");
+    const paxCounts = getPaxCounts(entry);
+    line("Pax:", paxCounts.Pax || 0);
+    line("Stag Male:", paxCounts["Stag Male"] || 0);
+    line("Stag Female:", paxCounts["Stag Female"] || 0);
+    line("Couple:", paxCounts.Couple || 0);
+    doc.setFont(undefined, "bold");
+    doc.setFontSize(11);
+    doc.text("Total People:", labelX, y);
+    doc.setTextColor(201, 168, 76);
+    doc.text(String(getTotalPeople(entry)), valueX, y);
+    doc.setTextColor(0);
+    y += 8;
+    y += 3;
+
     section("PAYMENT");
-    line("Mode:", entry.paymentMode);
-    line("DS Amount:", `INR ${entry.dsAmount || 0}`);
-    line("RS Amount:", `INR ${entry.rsAmount || 0}`);
+    if (entry.cashAmount > 0) line("Cash:", `INR ${entry.cashAmount}`);
+    if (entry.upiAmount > 0) line("UPI:", `INR ${entry.upiAmount}`);
+    if (entry.cardAmount > 0) line("Card:", `INR ${entry.cardAmount}`);
     doc.setFont(undefined, "bold");
     doc.setFontSize(11);
     doc.text("Total:", labelX, y);
@@ -137,15 +184,13 @@ export default function EntryDetail() {
     doc.text(`INR ${entry.totalAmount || 0}`, valueX, y);
     doc.setTextColor(0);
     y += 8;
-
     if (entry.withCover > 0) line("With Cover:", `INR ${entry.withCover}`);
     if (entry.withoutCover > 0) line("Without Cover:", `INR ${entry.withoutCover}`);
     y += 3;
 
-    if (entry.reffBy || entry.refMemberNo) {
+    if (entry.reffBy) {
       section("REFERENCE");
-      if (entry.reffBy) line("Referred By:", entry.reffBy);
-      if (entry.refMemberNo) line("Member No:", entry.refMemberNo);
+      line("Referred By:", entry.reffBy);
     }
 
     if (entry.remarks) {
@@ -161,7 +206,7 @@ export default function EntryDetail() {
     doc.setDrawColor(201, 168, 76);
     doc.rect(10, 10, 190, 277);
 
-    // ── PAGE 2 – ID PROOFS ──
+    // ── PAGE 2 – ID PROOFS ───────────────────────────────────────
     if (entry.idFrontUrl || entry.idBackUrl) {
       doc.addPage();
 
@@ -200,9 +245,7 @@ export default function EntryDetail() {
       try {
         if (entry.idFrontUrl) await renderIdImage("ID FRONT SIDE", entry.idFrontUrl);
         if (entry.idBackUrl) await renderIdImage("ID BACK SIDE", entry.idBackUrl);
-      } catch (e) {
-        // silent fail
-      }
+      } catch (e) { /* silent */ }
 
       doc.setFontSize(7);
       doc.setTextColor(120);
@@ -219,6 +262,7 @@ export default function EntryDetail() {
 
   const handleClose = () => navigate("/dashboard");
 
+  // ── Loading / Not Found ───────────────────────────────────────
   if (loading) {
     return (
       <div className="modal-overlay">
@@ -242,6 +286,9 @@ export default function EntryDetail() {
     );
   }
 
+  const paxCounts = getPaxCounts(entry);
+
+  // ── Render ────────────────────────────────────────────────────
   return (
     <div className="modal-overlay" onClick={handleClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -249,7 +296,7 @@ export default function EntryDetail() {
         <div className="modal-header">
           <div>
             <h2>Entry Details</h2>
-            <span className="sr-badge">SR #{entry.srNo}</span>
+            <span className="sr-badge">Sr-{entry.srNo}</span>
           </div>
           <button onClick={handleClose} className="close-btn">✕</button>
         </div>
@@ -257,8 +304,9 @@ export default function EntryDetail() {
         <div className="modal-body">
           <div className="detail-main-grid">
 
+            {/* ── Left: Info ── */}
             <div className="info-column">
-              <h3 className="column-heading">ℹ️ Information</h3>
+              <h3 className="column-heading">Information</h3>
 
               <DetailSection title="Personal Information">
                 <DetailRow label="Full Name" value={`${entry.name} ${entry.surname}`} />
@@ -268,29 +316,35 @@ export default function EntryDetail() {
               </DetailSection>
 
               <DetailSection title="Entry Details">
-                <DetailRow label="Entry Time" value={entry.entryTime} />
+                <DetailRow label="Entry Time" value={format12Hour(entry.entryTime)} />
                 <DetailRow label="Entry Date" value={new Date(entry.createdAt).toLocaleDateString("en-IN")} />
-                {/* ✅ tableNo null check */}
                 <DetailRow label="Table No" value={entry.tableNo ? `Table ${entry.tableNo}` : "N/A"} />
                 <DetailRow label="Category">
                   <span className={`category-badge ${entry.category.toLowerCase()}`}>{entry.category}</span>
                 </DetailRow>
-                {entry.additional && <DetailRow label="Additional" value="✓ Yes" />}
+              </DetailSection>
+
+              {/* ✅ Pax Details Section */}
+              <DetailSection title="Pax Details">
+                <DetailRow label="👥 Pax" value={paxCounts.Pax || 0} />
+                <DetailRow label="👨 Stag Male" value={paxCounts["Stag Male"] || 0} />
+                <DetailRow label="👩 Stag Female" value={paxCounts["Stag Female"] || 0} />
+                <DetailRow label="💑 Couple" value={paxCounts.Couple || 0} />
+                <DetailRow label="👤 Total People" value={getTotalPeople(entry)} highlight />
               </DetailSection>
 
               <DetailSection title="Payment">
-                <DetailRow label="Mode" value={entry.paymentMode} />
-                <DetailRow label="DS Amount" value={`₹ ${entry.dsAmount || 0}`} />
-                <DetailRow label="RS Amount" value={`₹ ${entry.rsAmount || 0}`} />
+                {entry.cashAmount > 0 && <DetailRow label="Cash" value={`₹ ${entry.cashAmount}`} />}
+                {entry.upiAmount > 0 && <DetailRow label="UPI" value={`₹ ${entry.upiAmount}`} />}
+                {entry.cardAmount > 0 && <DetailRow label="Card" value={`₹ ${entry.cardAmount}`} />}
                 <DetailRow label="Total" value={`₹ ${entry.totalAmount || 0}`} highlight />
                 {entry.withCover > 0 && <DetailRow label="With Cover" value={`₹ ${entry.withCover}`} />}
                 {entry.withoutCover > 0 && <DetailRow label="Without Cover" value={`₹ ${entry.withoutCover}`} />}
               </DetailSection>
 
-              {(entry.reffBy || entry.refMemberNo) && (
+              {entry.reffBy && (
                 <DetailSection title="Reference">
-                  {entry.reffBy && <DetailRow label="Referred By" value={entry.reffBy} />}
-                  {entry.refMemberNo && <DetailRow label="Ref Member No" value={entry.refMemberNo} />}
+                  <DetailRow label="Referred By" value={entry.reffBy} />
                 </DetailSection>
               )}
 
@@ -300,12 +354,28 @@ export default function EntryDetail() {
                 </DetailSection>
               )}
 
-              <DetailSection title="System Info">
-                <DetailRow label="Created" value={new Date(entry.createdAt).toLocaleString("en-IN")} />
-                <DetailRow label="Updated" value={new Date(entry.updatedAt).toLocaleString("en-IN")} />
+              <DetailSection title="ENTRY INFO">
+                <DetailRow
+                  label="Date"
+                  value={new Date(entry.createdAt).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric"
+                  })}
+                />
+
+                <DetailRow
+                  label="Time"
+                  value={new Date(entry.createdAt).toLocaleTimeString("en-IN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true
+                  })}
+                />
               </DetailSection>
             </div>
 
+            {/* ── Right: Photos ── */}
             <div className="photos-column">
               <h3 className="column-heading">📸 Photos</h3>
               <div className="photos-stack">
@@ -327,6 +397,11 @@ export default function EntryDetail() {
                     <img src={entry.idBackUrl} alt="ID Back" className="photo-card-img id-card" />
                   </div>
                 )}
+                {!entry.livePhotoUrl && !entry.idFrontUrl && !entry.idBackUrl && (
+                  <p style={{ color: "rgba(240,234,214,0.25)", fontSize: "12px", textAlign: "center", marginTop: "40px" }}>
+                    No photos captured
+                  </p>
+                )}
               </div>
             </div>
 
@@ -335,7 +410,8 @@ export default function EntryDetail() {
 
         <div className="modal-footer">
           <button onClick={handleDownloadPDF} className="btn-download">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="13" height="13" style={{ marginRight: 6, verticalAlign: "middle" }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+              width="13" height="13" style={{ marginRight: 6, verticalAlign: "middle" }}>
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
@@ -350,6 +426,7 @@ export default function EntryDetail() {
   );
 }
 
+// ── Sub-components ────────────────────────────────────────────
 function DetailSection({ title, children }) {
   return (
     <div className="detail-section">
@@ -363,7 +440,9 @@ function DetailRow({ label, value, children, highlight }) {
   return (
     <div className="detail-row">
       <span className="detail-label">{label}</span>
-      <span className={`detail-value${highlight ? " highlight" : ""}`}>{children || value}</span>
+      <span className={`detail-value${highlight ? " highlight" : ""}`}>
+        {children || value}
+      </span>
     </div>
   );
 }

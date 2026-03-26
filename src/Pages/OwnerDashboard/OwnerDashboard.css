@@ -1,0 +1,563 @@
+/* OwnerDashboard.css */
+
+.od-root {
+  min-height: 100vh;
+  background: #06060e;
+  color: #f0ead6;
+  font-family: "Outfit", sans-serif;
+}
+
+.od-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  box-sizing: border-box;
+}
+
+/* ── Header ── */
+.od-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(201, 168, 76, 0.12);
+  flex-wrap: wrap;
+}
+.od-header-left {
+  min-width: 0;
+}
+.od-header-eyebrow {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(201, 168, 76, 0.5);
+  margin-bottom: 6px;
+}
+.od-header-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 36px;
+  font-weight: 600;
+  color: #c9a84c;
+  margin: 0 0 4px;
+  line-height: 1.1;
+}
+.od-header-sub {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: rgba(240, 234, 214, 0.4);
+}
+
+/* Clock */
+.od-clock {
+  text-align: right;
+  flex-shrink: 0;
+}
+.od-clock-time {
+  display: block;
+  font-family: "Outfit", sans-serif;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: 2px;
+  color: rgba(201, 168, 76, 0.8);
+  white-space: nowrap;
+}
+.od-clock-date {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: rgba(240, 234, 214, 0.4);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* ── Tabs ── */
+.od-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid rgba(201, 168, 76, 0.1);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.od-tabs::-webkit-scrollbar {
+  display: none;
+}
+.od-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  font-family: "Outfit", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(240, 234, 214, 0.35);
+  cursor: pointer;
+  transition: color 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.od-tab:hover {
+  color: rgba(201, 168, 76, 0.6);
+}
+.od-tab.active {
+  color: #c9a84c;
+}
+.od-tab-bar {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #c9a84c;
+  border-radius: 2px 2px 0 0;
+}
+.od-tab-icon {
+  font-size: 14px;
+}
+
+/* ── Loading ── */
+.od-loading {
+  text-align: center;
+  padding: 60px;
+  color: rgba(201, 168, 76, 0.4);
+  font-size: 12px;
+  letter-spacing: 3px;
+}
+
+/* ── Stats Grid ── */
+.od-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.od-stat-card {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(201, 168, 76, 0.1);
+  border-radius: 4px;
+  transition: border-color 0.2s;
+  min-width: 0;
+}
+.od-stat-card:hover {
+  border-color: rgba(201, 168, 76, 0.25);
+}
+.od-stat-card.od-stat--gold {
+  background: rgba(201, 168, 76, 0.05);
+  border-color: rgba(201, 168, 76, 0.2);
+}
+.od-stat-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(240, 234, 214, 0.4);
+  margin-bottom: 10px;
+}
+.od-stat-value {
+  display: block;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 40px;
+  font-weight: 600;
+  color: #c9a84c;
+  line-height: 1;
+  margin-bottom: 6px;
+  word-break: break-all;
+}
+.od-stat-sub {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: rgba(240, 234, 214, 0.3);
+}
+
+/* ── Section ── */
+.od-section {
+  margin-bottom: 28px;
+}
+.od-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(201, 168, 76, 0.6);
+  margin-bottom: 14px;
+}
+.od-section-gem {
+  color: #c9a84c;
+}
+
+/* ── Breakdown Grid ── */
+.od-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.od-breakdown-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(201, 168, 76, 0.08);
+  border-radius: 4px;
+  min-width: 0;
+}
+.od-breakdown-label {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: rgba(240, 234, 214, 0.4);
+}
+.od-breakdown-value {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 28px;
+  font-weight: 600;
+  color: #c9a84c;
+  word-break: break-all;
+}
+.od-pay--cash {
+  border-color: rgba(76, 175, 80, 0.2);
+}
+.od-pay--upi {
+  border-color: rgba(33, 150, 243, 0.2);
+}
+.od-pay--card {
+  border-color: rgba(244, 67, 54, 0.2);
+}
+
+/* ── Quick Grid ── */
+.od-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.od-quick-btn {
+  padding: 16px;
+  background: rgba(201, 168, 76, 0.04);
+  border: 1px solid rgba(201, 168, 76, 0.15);
+  border-radius: 4px;
+  font-family: "Outfit", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: rgba(240, 234, 214, 0.6);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.od-quick-btn:hover {
+  background: rgba(201, 168, 76, 0.08);
+  border-color: rgba(201, 168, 76, 0.3);
+  color: #c9a84c;
+}
+
+/* ── Staff Form ── */
+.od-staff {
+  max-width: 480px;
+  width: 100%;
+}
+.od-staff-card {
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(201, 168, 76, 0.12);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.od-staff-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: #c9a84c;
+  margin: 0 0 6px;
+}
+.od-staff-sub {
+  font-size: 12px;
+  color: rgba(240, 234, 214, 0.4);
+  margin-bottom: 24px;
+}
+.od-staff-msg {
+  padding: 12px 16px;
+  border-radius: 3px;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+.od-staff-msg.success {
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  color: #4caf50;
+}
+.od-staff-msg.error {
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  color: #f44336;
+}
+.od-staff-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.od-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.od-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(240, 234, 214, 0.4);
+}
+.od-input {
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(201, 168, 76, 0.15);
+  border-radius: 3px;
+  font-family: "Outfit", sans-serif;
+  font-size: 13px;
+  color: #f0ead6;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.od-input:focus {
+  border-color: rgba(201, 168, 76, 0.4);
+}
+.od-input::placeholder {
+  color: rgba(240, 234, 214, 0.2);
+}
+.od-create-btn {
+  padding: 14px;
+  background: linear-gradient(135deg, #c9a84c, #9a7328);
+  border: none;
+  border-radius: 3px;
+  font-family: "Outfit", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #07070d;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  margin-top: 4px;
+  width: 100%;
+}
+.od-create-btn:hover {
+  opacity: 0.85;
+}
+.od-create-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+══════════════════════════════════════════ */
+
+/* ── Tablet landscape (≤ 1024px) ── */
+@media (max-width: 1024px) {
+  .od-quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Tablet portrait (≤ 768px) ── */
+@media (max-width: 768px) {
+  .od-wrap {
+    padding: 24px 16px;
+  }
+
+  .od-header {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+  }
+
+  .od-header-title {
+    font-size: 28px;
+  }
+
+  .od-clock-time {
+    font-size: 18px;
+  }
+
+  .od-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Revenue card spans full width */
+  .od-stat-card.od-stat--gold {
+    grid-column: 1 / -1;
+  }
+
+  .od-stat-value {
+    font-size: 32px;
+  }
+
+  .od-breakdown-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Guest breakdown — 4 cards in 2x2 */
+  .od-section:nth-of-type(2) .od-breakdown-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .od-quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .od-tab {
+    padding: 10px 14px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+  }
+
+  .od-tab-icon {
+    font-size: 13px;
+  }
+}
+
+/* ── Mobile (≤ 520px) ── */
+@media (max-width: 520px) {
+  .od-wrap {
+    padding: 16px 12px;
+  }
+
+  .od-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+  }
+
+  .od-header-title {
+    font-size: 24px;
+  }
+
+  .od-clock {
+    text-align: left;
+  }
+
+  .od-clock-time {
+    font-size: 20px;
+  }
+
+  .od-clock-date {
+    font-size: 10px;
+  }
+
+  .od-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .od-stat-card.od-stat--gold {
+    grid-column: auto;
+  }
+
+  .od-stat-card {
+    padding: 18px;
+  }
+
+  .od-stat-value {
+    font-size: 36px;
+  }
+
+  .od-breakdown-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .od-breakdown-card {
+    padding: 14px;
+  }
+
+  .od-breakdown-value {
+    font-size: 22px;
+  }
+
+  .od-quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .od-quick-btn {
+    padding: 14px 10px;
+    font-size: 10px;
+  }
+
+  .od-staff {
+    max-width: 100%;
+  }
+
+  .od-staff-card {
+    padding: 20px 16px;
+  }
+
+  .od-tab {
+    padding: 10px 10px;
+    letter-spacing: 1px;
+  }
+
+  /* Hide tab labels on very small screens, show only icons */
+  .od-tab span:not(.od-tab-icon):not(.od-tab-bar) {
+    display: none;
+  }
+
+  .od-tab-icon {
+    font-size: 16px;
+  }
+
+  .od-section-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+}
+
+/* ── Tiny mobile (≤ 360px) ── */
+@media (max-width: 360px) {
+  .od-wrap {
+    padding: 14px 10px;
+  }
+
+  .od-header-title {
+    font-size: 20px;
+  }
+
+  .od-breakdown-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .od-breakdown-card {
+    padding: 12px;
+  }
+
+  .od-breakdown-value {
+    font-size: 20px;
+  }
+
+  .od-quick-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .od-staff-card {
+    padding: 16px 12px;
+  }
+}

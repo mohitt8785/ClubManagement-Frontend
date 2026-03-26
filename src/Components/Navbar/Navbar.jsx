@@ -1,18 +1,16 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../Context/AuthContext";  
 import "./Navbar.css";
 
 export default function Navbar() {
-  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setLoggingOut(true);
-    setTimeout(() => {
-      localStorage.removeItem("jaguarclub_auth");
-      navigate("/login");
-    }, 600);
+    await logout();  // ← AuthContext ka logout call karo
   };
+
 
   return (
     <nav className="nb-nav">
