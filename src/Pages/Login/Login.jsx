@@ -48,77 +48,86 @@ export default function Login() {
   const [showPass, setShowPass] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [toast, setToast] = useState(null);
-  const [debugInfo, setDebugInfo] = useState(""); // ← For UI display
+  const [debugInfo, setDebugInfo] = useState("");
 
   const navigate = useNavigate();
   const { login, initialized, loading: authLoading } = useAuth();
 
   DEBUG.log("LOGIN_COMPONENT", "Component rendered");
-  DEBUG.log("LOGIN_COMPONENT", "Auth Context State", {
-    initialized,
-    authLoading,
-  });
 
-  // ✅ IMPROVED: Check auth status ONLY after initialization
+  // ✅ IMPROVED: Wait for initialization BEFORE checking stored user
   useEffect(() => {
-    DEBUG.log("LOGIN_EFFECT", "useEffect triggered", { initialized, authLoading });
+    DEBUG.log("LOGIN_EFFECT", "useEffect triggered", {
+      initialized,
+      authLoading
+    });
 
-    setTimeout(() => {
+    // ← Animation trigger
+    const animTimer = setTimeout(() => {
       setMounted(true);
       DEBUG.log("LOGIN_EFFECT", "Component mounted (animation trigger)");
     }, 80);
 
-    // ── Wait for auth context to be ready ──
+    // ← Auth check (only after initialization)
     if (!initialized) {
-      DEBUG.log(
-        "LOGIN_EFFECT",
-        "⏳ Auth context NOT initialized yet, waiting...",
-        { initialized, authLoading }
-      );
+      DEBUG.log("LOGIN_EFFECT", "⏳ Auth context NOT initialized yet", {
+        initialized,
+        authLoading,
+      });
       setDebugInfo("🔄 Initializing auth context...");
-      return;
+      return () => clearTimeout(animTimer);
     }
 
     if (authLoading) {
       DEBUG.log("LOGIN_EFFECT", "⏳ Auth context still loading...");
       setDebugInfo("🔄 Loading auth state...");
-      return;
+      return () => clearTimeout(animTimer);
     }
 
-    DEBUG.log(
+    DEBUG.success(
       "LOGIN_EFFECT",
-      "✓ Auth context initialized, checking localStorage..."
+      "✓ Auth context initialized & loaded",
+      { initialized, authLoading }
     );
     setDebugInfo("✓ Auth ready - checking stored user...");
 
-    const stored = localStorage.getItem("jc_user");
-    DEBUG.log("LOGIN_EFFECT", "localStorage check", {
-      hasStoredUser: !!stored,
-    });
+    // ← Check for stored user
+    const checkStoredUser = async () => {
+      await new Promise(resolve => setTimeout(resolve, 100));
 
-    if (stored) {
-      try {
-        const user = JSON.parse(stored);
-        DEBUG.success("LOGIN_EFFECT", "User found in localStorage", {
-          username: user.username,
-          role: user.role,
-        });
-        setDebugInfo(`✓ User found: ${user.username} (${user.role})`);
+      const stored = localStorage.getItem("jc_user");
+      DEBUG.log("LOGIN_EFFECT", "localStorage check", {
+        hasStoredUser: !!stored,
+      });
 
-        const redirect = user.role === "owner" ? "/owner" : "/dashboard";
-        DEBUG.log("LOGIN_EFFECT", `Redirecting to ${redirect}...`);
-        setDebugInfo(`📍 Redirecting to ${redirect}...`);
+      if (stored) {
+        try {
+          const user = JSON.parse(stored);
+          DEBUG.success("LOGIN_EFFECT", "User found in localStorage", {
+            username: user.username,
+            role: user.role,
+          });
+          setDebugInfo(`✓ User found: ${user.username} (${user.role})`);
 
-        navigate(redirect, { replace: true });
-      } catch (err) {
-        DEBUG.error("LOGIN_EFFECT", "Failed to parse stored user", err);
-        setDebugInfo("❌ Parse error - clearing storage");
-        localStorage.removeItem("jc_user");
+          const redirect = user.role === "owner" ? "/owner" : "/dashboard";
+          DEBUG.log("LOGIN_EFFECT", `Redirecting to ${redirect}...`);
+          setDebugInfo(`📍 Redirecting to ${redirect}...`);
+
+          // ← Use replace to prevent back button issues
+          navigate(redirect, { replace: true });
+        } catch (err) {
+          DEBUG.error("LOGIN_EFFECT", "Failed to parse stored user", err);
+          setDebugInfo("❌ Parse error - clearing storage");
+          localStorage.removeItem("jc_user");
+        }
+      } else {
+        DEBUG.log("LOGIN_EFFECT", "No stored user found");
+        setDebugInfo("ℹ️ No stored user - ready for login");
       }
-    } else {
-      DEBUG.log("LOGIN_EFFECT", "No stored user found");
-      setDebugInfo("ℹ️ No stored user - ready for login");
-    }
+    };
+
+    checkStoredUser();
+    return () => clearTimeout(animTimer);
   }, [navigate, initialized, authLoading]);
 
   const handleRoleSwitch = (r) => {
@@ -148,7 +157,6 @@ export default function Login() {
     DEBUG.log("LOGIN_SUBMIT", "Login form submitted", {
       username,
       role,
-      password: "***",
     });
     setDebugInfo("🔐 Authenticating...");
 
@@ -162,12 +170,11 @@ export default function Login() {
       const res = await api.post("/auth/login", { username, password });
       const user = res.data.data;
 
-      DEBUG.success("LOGIN_SUBMIT", "Login successful", {
+      DEBUG.success("LOGIN_SUBMIT", "Login API successful", {
         username: user.username,
         role: user.role,
-        id: user.id,
       });
-      setDebugInfo(`✓ Login successful for ${user.username}`);
+      setDebugInfo(`✓ API response received`);
 
       // ── Role validation ──
       if (user.role !== role) {
@@ -177,38 +184,40 @@ export default function Login() {
           actualRole: user.role,
         });
         showToast(msg, "error");
-        setDebugInfo(`❌ Role mismatch: expected ${role}, got ${user.role}`);
+        setDebugInfo(`❌ Role mismatch`);
         setLoading(false);
         return;
       }
 
-      DEBUG.log("LOGIN_SUBMIT", "Calling login() function to update context...");
+      DEBUG.log("LOGIN_SUBMIT", "Calling login() to update context...");
       setDebugInfo("🔄 Updating auth context...");
 
-      login(user); // ✅ This sets localStorage + state
+      // ← CRITICAL: Save to localStorage and state
+      login(user);
 
       DEBUG.success("LOGIN_SUBMIT", "Auth context updated", {
         username: user.username,
       });
-      setDebugInfo(`✓ Auth context updated`);
+      setDebugInfo(`✓ Context updated`);
 
       showToast(
         `Welcome, ${user.username}. Access granted.`,
         "success"
       );
-      setDebugInfo(`✓ Welcome message shown - preparing redirect...`);
+      setDebugInfo(`✓ Welcome message shown`);
 
-      // ✅ IMPORTANT: Wait a bit for state to update, then navigate
-      setTimeout(() => {
+      // ← IMPORTANT: Wait for state to propagate before navigating
+      // ← This ensures React has processed the state update
+      const navigationTimer = setTimeout(() => {
         const redirect = user.role === "owner" ? "/owner" : "/dashboard";
-        DEBUG.log("LOGIN_SUBMIT", `Navigation timeout completed`, {
-          redirectPath: redirect,
-        });
+        DEBUG.success("LOGIN_SUBMIT", `Navigation starting to ${redirect}`);
         setDebugInfo(`📍 Navigating to ${redirect}...`);
 
-        DEBUG.success("LOGIN_SUBMIT", `Navigating to ${redirect}`);
+        // ← Use replace to prevent back button taking user to login again
         navigate(redirect, { replace: true });
-      }, 900);
+      }, 1200); // ← Increased from 900ms to 1200ms for Netlify
+
+      return () => clearTimeout(navigationTimer);
     } catch (err) {
       const msg =
         err.response?.data?.message ||
@@ -216,7 +225,6 @@ export default function Login() {
       DEBUG.error("LOGIN_SUBMIT", "Login failed", {
         message: msg,
         status: err.response?.status,
-        error: err.message,
       });
       setDebugInfo(`❌ Login failed: ${msg}`);
 
@@ -229,11 +237,10 @@ export default function Login() {
 
   return (
     <div
-      className={`jc-root ${mounted ? "mounted" : ""} ${
-        isOwner ? "mode-owner" : "mode-staff"
-      }`}
+      className={`jc-root ${mounted ? "mounted" : ""} ${isOwner ? "mode-owner" : "mode-staff"
+        }`}
     >
-      {/* ── DEBUG INFO BOX (Only in development) ── */}
+      {/* ── DEBUG INFO BOX (Development only) ── */}
       {import.meta.env.DEV && (
         <div
           style={{
@@ -282,6 +289,7 @@ export default function Login() {
           </>
         )}
       </div>
+
 
       {/* ══ LEFT PANEL ══ */}
       <div className="jc-left">
@@ -561,8 +569,8 @@ export default function Login() {
                 {loading
                   ? "Authenticating…"
                   : isOwner
-                  ? "Enter as Owner ◆"
-                  : "Enter as Staff ★"}
+                    ? "Enter as Owner ◆"
+                    : "Enter as Staff ★"}
               </span>
             </button>
           </form>

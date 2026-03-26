@@ -1,16 +1,133 @@
-// Components/ProtectedRoute/ProtectedRoute.jsx - FIXED VERSION
+// Components/ProtectedRoute/ProtectedRoute.jsx - PRODUCTION VERSION
 
 import { Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../Context/AuthContext";
 
+// ── Debug Helper ──
+const DEBUG = {
+  log: (section, message, data = null) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const color = "color: #4ECDC4; font-weight: bold;";
+    console.log(
+      `%c[${timestamp}] [${section}]`,
+      color,
+      message,
+      data ? data : ""
+    );
+  },
+  error: (section, message, error = null) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const color = "color: #FF6B6B; font-weight: bold;";
+    console.error(
+      `%c[${timestamp}] [${section}] ❌`,
+      color,
+      message,
+      error ? error : ""
+    );
+  },
+  check: (section, condition, message) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const color = condition ? "color: #51CF66;" : "color: #FFA94D;";
+    const icon = condition ? "✓" : "✗";
+    console.log(
+      `%c[${timestamp}] [${section}] ${icon}`,
+      color + "font-weight: bold;",
+      message,
+      condition
+    );
+  },
+};
+
 const ProtectedRoute = ({ children, ownerOnly = false, staffOnly = false }) => {
-  // ✅ Get initialized flag
-  const { isLoggedIn, isOwner, isStaff, loading, initialized } = useAuth();
+  // ✅ Get auth state
+  const { isLoggedIn, isOwner, isStaff, loading, initialized, user } = useAuth();
 
-  console.log("[ProtectedRoute] State:", { loading, initialized, isLoggedIn, ownerOnly, staffOnly });
+  // ✅ Add local state to handle re-renders
+  const [isReady, setIsReady] = useState(false);
+  const [checksPassed, setChecksPassed] = useState(false);
 
-  // ✅ CRITICAL: Wait for BOTH loading and initialization
-  if (loading || !initialized) {
+  DEBUG.log("PROTECTED_ROUTE", "Route evaluation started", {
+    initialized,
+    loading,
+    isLoggedIn,
+    ownerOnly,
+    staffOnly,
+  });
+
+  // ✅ First effect: Wait for context to initialize
+  useEffect(() => {
+    if (initialized && !loading) {
+      DEBUG.log("PROTECTED_ROUTE", "✓ Context initialization confirmed");
+      setIsReady(true);
+    } else {
+      DEBUG.log("PROTECTED_ROUTE", "⏳ Waiting for context...", {
+        initialized,
+        loading,
+      });
+    }
+  }, [initialized, loading]);
+
+  // ✅ Second effect: Run permission checks only when ready
+  useEffect(() => {
+    if (!isReady) {
+      DEBUG.log("PROTECTED_ROUTE", "Waiting for ready state...");
+      return;
+    }
+
+    DEBUG.log("PROTECTED_ROUTE", "Running permission checks...", {
+      isLoggedIn,
+      isOwner,
+      isStaff,
+    });
+
+    // Check all conditions
+    DEBUG.check("PROTECTED_ROUTE", isLoggedIn, "User is logged in");
+    DEBUG.check("PROTECTED_ROUTE", !ownerOnly || isOwner, "Owner check passed");
+    DEBUG.check("PROTECTED_ROUTE", !staffOnly || isStaff, "Staff check passed");
+
+    if (isLoggedIn) {
+      DEBUG.log("PROTECTED_ROUTE", "User details", {
+        username: user?.username,
+        role: user?.role,
+        isOwner,
+        isStaff,
+      });
+    }
+
+    // Perform all checks
+    let shouldAllow = true;
+    let redirectPath = null;
+
+    if (!isLoggedIn) {
+      DEBUG.error("PROTECTED_ROUTE", "User NOT logged in");
+      shouldAllow = false;
+      redirectPath = "/login";
+    } else if (ownerOnly && !isOwner) {
+      DEBUG.error("PROTECTED_ROUTE", "Staff tried to access owner-only route");
+      shouldAllow = false;
+      redirectPath = "/dashboard";
+    } else if (staffOnly && !isStaff) {
+      DEBUG.error("PROTECTED_ROUTE", "Owner tried to access staff-only route");
+      shouldAllow = false;
+      redirectPath = "/owner";
+    }
+
+    if (shouldAllow) {
+      DEBUG.success("PROTECTED_ROUTE", "✓✓✓ ALL CHECKS PASSED ✓✓✓");
+    }
+
+    setChecksPassed(shouldAllow);
+  }, [isReady, isLoggedIn, isOwner, isStaff, user, ownerOnly, staffOnly]);
+
+  // ✅ WAITING STATE: Show loading while initializing
+  if (loading || !initialized || !isReady) {
+    DEBUG.log("PROTECTED_ROUTE", "⏳ LOADING STATE - Showing spinner", {
+      loading,
+      initialized,
+      isReady,
+    });
+
     return (
       <div
         style={{
@@ -19,7 +136,7 @@ const ProtectedRoute = ({ children, ownerOnly = false, staffOnly = false }) => {
           alignItems: "center",
           justifyContent: "center",
           background: "#06060E",
-          color: "rgba(201,168,76,0.5)",
+          color: "rgba(78, 205, 196, 0.8)",
           fontFamily: "'Outfit', sans-serif",
           fontSize: "11px",
           letterSpacing: "4px",
@@ -31,39 +148,50 @@ const ProtectedRoute = ({ children, ownerOnly = false, staffOnly = false }) => {
             style={{
               width: "32px",
               height: "32px",
-              border: "2px solid rgba(201,168,76,0.2)",
-              borderTopColor: "#C9A84C",
+              border: "2px solid rgba(78, 205, 196, 0.2)",
+              borderTopColor: "#4ECDC4",
               borderRadius: "50%",
               animation: "spin 0.8s linear infinite",
               margin: "0 auto 16px",
             }}
           />
-          Authenticating…
+          <div style={{ marginBottom: "12px" }}>Authenticating…</div>
+          <div
+            style={{
+              fontSize: "9px",
+              opacity: 0.6,
+              fontWeight: "normal",
+              letterSpacing: "normal",
+            }}
+          >
+            {loading && "Loading auth state..."}
+            {initialized && "Initializing..."}
+            {isReady && "Final checks..."}
+          </div>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
     );
   }
 
-  // ✅ Not logged in → login page
-  if (!isLoggedIn) {
-    console.log("[ProtectedRoute] Not logged in, redirecting to /login");
-    return <Navigate to="/login" replace />;
+  // ✅ PERMISSION DENIED: Redirect
+  if (!checksPassed) {
+    let redirectPath = "/login";
+
+    if (isLoggedIn) {
+      if (ownerOnly && !isOwner) {
+        redirectPath = "/dashboard";
+      } else if (staffOnly && !isStaff) {
+        redirectPath = "/owner";
+      }
+    }
+
+    DEBUG.error("PROTECTED_ROUTE", `Redirecting to ${redirectPath}`);
+    return <Navigate to={redirectPath} replace />;
   }
 
-  // ✅ Owner only route — staff ne try kiya → staff dashboard
-  if (ownerOnly && !isOwner) {
-    console.log("[ProtectedRoute] Staff tried to access owner route, redirecting to /dashboard");
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  // ✅ Staff only route — owner ne try kiya → owner dashboard
-  if (staffOnly && !isStaff) {
-    console.log("[ProtectedRoute] Owner tried to access staff route, redirecting to /owner");
-    return <Navigate to="/owner" replace />;
-  }
-
-  // ✅ All checks passed
+  // ✅ PERMISSION GRANTED: Render children
+  DEBUG.success("PROTECTED_ROUTE", "✓✓✓ Rendering protected content ✓✓✓");
   return children;
 };
 
