@@ -26,6 +26,16 @@ const DEBUG = {
       error ? error : ""
     );
   },
+  success: (section, message, data = null) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const color = "color: #51CF66; font-weight: bold;";
+    console.log(
+      `%c[${timestamp}] [${section}] ✓ SUCCESS:`,
+      color,
+      message,
+      data ? data : ""
+    );
+  },
   check: (section, condition, message) => {
     const timestamp = new Date().toLocaleTimeString();
     const color = condition ? "color: #51CF66;" : "color: #FFA94D;";
@@ -45,7 +55,8 @@ const ProtectedRoute = ({ children, ownerOnly = false, staffOnly = false }) => {
 
   // ✅ Add local state to handle re-renders
   const [isReady, setIsReady] = useState(false);
-  const [checksPassed, setChecksPassed] = useState(false);
+  /** null = permission check not run yet (avoids redirect flash before useEffect runs) */
+  const [checksPassed, setChecksPassed] = useState(null);
 
   DEBUG.log("PROTECTED_ROUTE", "Route evaluation started", {
     initialized,
@@ -120,12 +131,13 @@ const ProtectedRoute = ({ children, ownerOnly = false, staffOnly = false }) => {
     setChecksPassed(shouldAllow);
   }, [isReady, isLoggedIn, isOwner, isStaff, user, ownerOnly, staffOnly]);
 
-  // ✅ WAITING STATE: Show loading while initializing
-  if (loading || !initialized || !isReady) {
+  // ✅ WAITING STATE: Show loading while initializing or before permission effect runs
+  if (loading || !initialized || !isReady || checksPassed === null) {
     DEBUG.log("PROTECTED_ROUTE", "⏳ LOADING STATE - Showing spinner", {
       loading,
       initialized,
       isReady,
+      checksPending: checksPassed === null,
     });
 
     return (
@@ -174,8 +186,8 @@ const ProtectedRoute = ({ children, ownerOnly = false, staffOnly = false }) => {
     );
   }
 
-  // ✅ PERMISSION DENIED: Redirect
-  if (!checksPassed) {
+  // ✅ PERMISSION DENIED: Redirect (only after check completed and failed)
+  if (checksPassed === false) {
     let redirectPath = "/login";
 
     if (isLoggedIn) {

@@ -260,6 +260,7 @@ export default function Login() {
             lineHeight: "1.6",
             maxHeight: "200px",
             overflowY: "auto",
+            display: "none"
           }}
         >
           <div style={{ marginBottom: "8px", opacity: 0.7 }}>DEBUG INFO:</div>
@@ -507,7 +508,7 @@ export default function Login() {
                   placeholder={isOwner ? "@admin" : "@staff_username"}
                   required
                   autoFocus
-                  autoComplete="off"
+                  autoComplete="username"
                 />
               </div>
             </div>
@@ -533,6 +534,7 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter Password"
                   required
+                  autoComplete="current-password"
                 />
                 <span
                   className="jc-input-ico jc-input-ico--right"

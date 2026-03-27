@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
 import OwnerNavbar from "../../Components/OwnerNavbar/OwnerNavbar";
 import DailyReport from "../DailyReport/DailyReport";
+import WeeklyReport from "../WeeklyReport/WeeklyReport";
 import MonthlyReport from "../MonthlyReport/MonthlyReport";
 import "./OwnerDashboard.css";
 
@@ -76,6 +77,7 @@ export default function OwnerDashboard() {
     const tabs = [
         { id: "overview", label: "Overview", icon: "◈" },
         { id: "daily", label: "Daily Report", icon: "📅" },
+        { id: "weekly", label: "Weekly Report", icon: "📊" },
         { id: "monthly", label: "Monthly Report", icon: "📆" },
         { id: "staff", label: "Staff Management", icon: "👤" },
     ];
@@ -189,6 +191,9 @@ export default function OwnerDashboard() {
                                             <button className="od-quick-btn" onClick={() => setActiveTab("daily")}>
                                                 📅 Daily Report
                                             </button>
+                                            <button className="od-quick-btn" onClick={() => setActiveTab("weekly")}>
+                                                📊 Weekly Report
+                                            </button>
                                             <button className="od-quick-btn" onClick={() => setActiveTab("monthly")}>
                                                 📆 Monthly Report
                                             </button>
@@ -205,6 +210,7 @@ export default function OwnerDashboard() {
                     )}
 
                     {activeTab === "daily" && <DailyReport />}
+                    {activeTab === "weekly" && <WeeklyReport />}
                     {activeTab === "monthly" && <MonthlyReport />}
 
                     {/* ── STAFF ── */}

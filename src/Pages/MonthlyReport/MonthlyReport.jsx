@@ -1,7 +1,9 @@
 // Pages/MonthlyReport/MonthlyReport.jsx
 
 import { useState, useEffect } from "react";
-import api from "../../utils/api";
+import { toast } from "react-toastify";
+import api from "../../utils/api.js";
+import { downloadExcelReport } from "../../utils/downloadExcelReport.js";
 import "./MonthlyReport.css";
 
 const MONTHS = [
@@ -15,6 +17,7 @@ export default function MonthlyReport() {
   const [year, setYear] = useState(now.getFullYear());
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -30,6 +33,18 @@ export default function MonthlyReport() {
     };
     fetchReport();
   }, [month, year]);
+
+  const handleDownload = async () => {
+    try {
+      setDownloading(true);
+      await downloadExcelReport({ period: "monthly", year, month });
+      toast.success("Monthly Excel report downloaded.");
+    } catch (e) {
+      toast.error(e?.message || "Could not download report.");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const years = Array.from({ length: 3 }, (_, i) => now.getFullYear() - i);
 
@@ -49,6 +64,14 @@ export default function MonthlyReport() {
           <select className="mr-select" value={year} onChange={e => setYear(+e.target.value)}>
             {years.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
+          <button
+            type="button"
+            className="mr-download-btn"
+            disabled={downloading || loading}
+            onClick={handleDownload}
+          >
+            {downloading ? "Preparing…" : "⬇ Excel"}
+          </button>
         </div>
       </div>
 

@@ -80,10 +80,10 @@ export default function ChangePassword() {
             <span className="cp-diamond">◆</span>
             <h1 className="cp-title">Change Password</h1>
             <div className="cp-header-spacer" />
-          </div>
             <button className="cp-close" onClick={() => navigate(-1)} title="Close">
               ✕
             </button>
+          </div>
           {/* <p className="cp-subtitle">Update your account credentials securely</p> */}
         </div>
 

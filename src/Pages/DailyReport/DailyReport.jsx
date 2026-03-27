@@ -1,12 +1,15 @@
 // Pages/DailyReport/DailyReport.jsx
 
 import { useState, useEffect } from "react";
-import api from "../../utils/api";
+import { toast } from "react-toastify";
+import api from "../../utils/api.js";
+import { downloadExcelReport } from "../../utils/downloadExcelReport.js";
 import "./DailyReport.css";
 
 export default function DailyReport() {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
   useEffect(() => {
@@ -24,6 +27,18 @@ export default function DailyReport() {
     fetchReport();
   }, [date]);
 
+  const handleDownload = async () => {
+    try {
+      setDownloading(true);
+      await downloadExcelReport({ period: "daily", date });
+      toast.success("Daily Excel report downloaded.");
+    } catch (e) {
+      toast.error(e?.message || "Could not download report.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="dr-root">
       <div className="dr-header">
@@ -31,10 +46,23 @@ export default function DailyReport() {
           <h2 className="dr-title">Daily Report</h2>
           <p className="dr-sub">Revenue & guest summary for selected date</p>
         </div>
-        <input type="date" className="dr-date-input"
-          value={date}
-          max={new Date().toISOString().split("T")[0]}
-          onChange={e => setDate(e.target.value)} />
+        <div className="dr-header-actions">
+          <input
+            type="date"
+            className="dr-date-input"
+            value={date}
+            max={new Date().toISOString().split("T")[0]}
+            onChange={(e) => setDate(e.target.value)}
+          />
+          <button
+            type="button"
+            className="dr-download-btn"
+            disabled={downloading || loading}
+            onClick={handleDownload}
+          >
+            {downloading ? "Preparing…" : "⬇ Download Excel"}
+          </button>
+        </div>
       </div>
 
       {loading ? (
