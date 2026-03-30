@@ -266,7 +266,7 @@ body {
 }
 .jc-logo-inner-ring {
   position: absolute;
-  inset: 12px;
+  inset: 10px;
   border-radius: 50%;
   border: 1px solid rgba(201, 168, 76, 0.08);
   animation: spinRing 15s linear infinite reverse;
@@ -289,8 +289,8 @@ body {
 }
 
 .jc-logo-img {
-  width: 72px;
-  height: 72px;
+  width: 100px;
+  height: 100px;
   object-fit: contain;
   filter: drop-shadow(0 0 18px rgba(201, 168, 76, 0.5));
   position: relative;

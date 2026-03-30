@@ -14,6 +14,7 @@ export default function Navbar() {
 
   return (
     <nav className="nb-nav">
+       <div className="nb-shimmer" />
       <div className="nb-container">
 
         {/* ── LEFT: Logo block ── */}

@@ -43,7 +43,7 @@
 /* HEADER */
 .ef-header {
   text-align: center;
-  margin-bottom: 22px;
+  margin-bottom: 10px;
 }
 .ef-badge {
   display: inline-block;
@@ -66,7 +66,7 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  letter-spacing: 3px;
+  /* letter-spacing: 3px; */
   margin-bottom: 12px;
 }
 .ef-title-line {
@@ -442,7 +442,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 2px;
   margin-top: 6px;
   animation: paxBadgeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }

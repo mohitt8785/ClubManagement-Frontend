@@ -248,8 +248,8 @@ export default function EntryForm({ onEntryAdded }) {
   return (
     <div className="ef-wrapper">
       <div className="ef-header">
-        <div className="ef-badge">★ MEMBERS ONLY ★</div>
-        <h1 className="ef-title">Club Entry Form</h1>
+        {/* <div className="ef-badge">★ MEMBERS ONLY ★</div> */}
+        <h1 className="ef-title">Entry Form</h1>
         <div className="ef-title-line" />
       </div>
 
@@ -456,7 +456,7 @@ export default function EntryForm({ onEntryAdded }) {
                   </div>
                   <div className="ef-pax-summary">
                     <span className="ef-pax-summary-item">
-                      <span className="ef-pax-summary-icon">👥</span>
+                      <span className="ef-pax-summary-icon"></span>
                       <span className="ef-pax-summary-label">Pax:</span>
                       <span className="ef-pax-summary-value">{form.paxCounts["Pax"]}</span>
                     </span>
@@ -464,7 +464,7 @@ export default function EntryForm({ onEntryAdded }) {
                     {/* <span className="ef-pax-summary-divider">|</span> */}
 
                     <span className="ef-pax-summary-item">
-                      <span className="ef-pax-summary-icon">👨</span>
+                      <span className="ef-pax-summary-icon"></span>
                       <span className="ef-pax-summary-label">Male:</span>
                       <span className="ef-pax-summary-value">{form.paxCounts["Stag Male"]}</span>
                     </span>
@@ -472,7 +472,7 @@ export default function EntryForm({ onEntryAdded }) {
                     {/* <span className="ef-pax-summary-divider">|</span> */}
 
                     <span className="ef-pax-summary-item">
-                      <span className="ef-pax-summary-icon">👩</span>
+                      <span className="ef-pax-summary-icon"></span>
                       <span className="ef-pax-summary-label">Female:</span>
                       <span className="ef-pax-summary-value">{form.paxCounts["Stag Female"]}</span>
                     </span>
@@ -480,7 +480,7 @@ export default function EntryForm({ onEntryAdded }) {
                     {/* <span className="ef-pax-summary-divider">|</span> */}
 
                     <span className="ef-pax-summary-item">
-                      <span className="ef-pax-summary-icon">💑</span>
+                      <span className="ef-pax-summary-icon"></span>
                       <span className="ef-pax-summary-label">Couple:</span>
                       <span className="ef-pax-summary-value">{form.paxCounts["Couple"]}</span>
                     </span>

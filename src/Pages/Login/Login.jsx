@@ -309,7 +309,7 @@ export default function Login() {
         <div className="jc-left-content">
           <div className="jc-est">
             <span className="jc-est-line" />
-            <span>Est. 2024</span>
+            <span>Est. 2018</span>
             <span className="jc-est-line" />
           </div>
           <div className="jc-logo-wrap">
@@ -458,7 +458,7 @@ export default function Login() {
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
-              Owner
+              ADMIN
             </button>
           </div>
 
@@ -466,14 +466,14 @@ export default function Login() {
           <div className="jc-right-header">
             <span className="jc-right-badge">
               <span className="jc-badge-dot" />
-              {isOwner ? "Owner Portal" : "Staff Portal"}
+              {isOwner ? "Admin Portal" : "Staff Portal"}
             </span>
             <h2 className="jc-right-title">
-              {isOwner ? "Owner Access" : "Staff Access"}
+              {isOwner ? "Admin Access" : "Staff Access"}
             </h2>
             <p className="jc-right-sub">
               {isOwner
-                ? "Authorized owner access only"
+                ? "Authorized Admin access only"
                 : "Enter credentials to manage guest entries"}
             </p>
           </div>
@@ -505,7 +505,7 @@ export default function Login() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder={isOwner ? "@admin" : "@staff_username"}
+                  placeholder={isOwner ? "Enter username" : "Enter username"}
                   required
                   autoFocus
                   autoComplete="username"
@@ -571,8 +571,8 @@ export default function Login() {
                 {loading
                   ? "Authenticating…"
                   : isOwner
-                    ? "Enter as Owner ◆"
-                    : "Enter as Staff ★"}
+                    ? "ADMIN LOGIN ◆"
+                    : "STAFF LOGIN ★"}
               </span>
             </button>
           </form>
@@ -584,8 +584,8 @@ export default function Login() {
             </span>
             <p className="jc-info-text">
               {isOwner
-                ? "Owner access: Payment reports, daily & monthly analytics, full overview."
-                : "Staff access: Entry form, guest records, and PDF downloads."}
+                ? "Admin access: Payment reports, daily & monthly analytics, full overview."
+                : "Staff access: Entry form, Guest records, and PDF downloads."}
             </p>
           </div>
 

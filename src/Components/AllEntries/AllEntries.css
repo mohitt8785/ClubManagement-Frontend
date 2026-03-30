@@ -279,7 +279,7 @@
 .category-badge.vip {
   background: rgba(157,122,245,0.1);
   color: #9D7AF5;
-  border: 1px solid rgba(157,122,245,0.3);
+  border: 1px solid rgba(52, 26, 117, 0.3);
 }
 
 .category-badge.vvip {
@@ -295,7 +295,7 @@
   gap: 4px;
   padding: 4px 10px;
   background: linear-gradient(135deg, rgba(157,122,245,0.12), rgba(157,122,245,0.06));
-  border: 1px solid rgba(157,122,245,0.25);
+  /* border: 1px solid rgba(157,122,245,0.25); */
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;

@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext.jsx";
@@ -17,10 +15,21 @@ export default function AllEntries() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("");
 
+  const [isVisible, setIsVisible] = useState(false);
+
   const fetchEntries = useCallback(async () => {
     try {
       setLoading(true);
+      setIsVisible(false); // Hide loader initially
+      
+      // Show loader after 300ms if still loading
+      const timer = setTimeout(() => {
+        if (true) setIsVisible(true); // Will update based on loading state
+      }, 300);
+      
       const res = await api.get("/entries");
+      clearTimeout(timer);
+      
       if (res.data.success) {
         setEntries(res.data.data);
         setFilteredEntries(res.data.data);
@@ -29,6 +38,7 @@ export default function AllEntries() {
       setError("Failed to fetch entries");
     } finally {
       setLoading(false);
+      setIsVisible(false);
     }
   }, []);
 
@@ -107,7 +117,19 @@ export default function AllEntries() {
     );
   };
 
-  if (loading) return <div className="loading-state">Loading entries…</div>;
+  const [dots, setDots] = useState(".");
+
+  useEffect(() => {
+    if (!loading) return;
+    
+    const interval = setInterval(() => {
+      setDots(prev => prev.length < 3 ? prev + "." : ".");
+    }, 500);
+    
+    return () => clearInterval(interval);
+  }, [loading]);
+
+  if (loading && isVisible) return <div className="loading-state">Loading entries…</div>;
   if (error) return <div className="error-state">{error}</div>;
 
   return (
