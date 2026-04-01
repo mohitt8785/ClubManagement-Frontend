@@ -54,6 +54,7 @@ export default function EntryForm({ onEntryAdded }) {
   const [srNo, setSrNo] = useState(null);
   const [showWebcam, setShowWebcam] = useState(null);
   const [stream, setStream] = useState(null);
+  const [cameraMode, setCameraMode] = useState(null); // "user" or "environment"
   const videoRef = useRef(null);
 
   const age = calcAge(form.dob);
@@ -72,22 +73,43 @@ export default function EntryForm({ onEntryAdded }) {
     setForm(updated);
   };
 
-  const startWebcam = async (type) => {
+  const startWebcam = async (type, mode = "user") => {
     try {
-      const ms = await navigator.mediaDevices.getUserMedia({
+      const constraints = {
         video: {
-          facingMode: type === "live" ? "user" : "environment",
+          facingMode: mode, // "user" for front, "environment" for back
           width: { ideal: 800 },
           height: { ideal: 800 },
         },
-      });
+      };
+
+      // Try with specified facingMode first
+      let ms;
+      try {
+        ms = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        // Fallback: if exact facingMode fails, try without specifying it
+        console.warn("Specified camera not available, trying fallback:", err);
+        ms = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 800 }, height: { ideal: 800 } },
+        });
+      }
+
       setStream(ms);
       setShowWebcam(type);
+      setCameraMode(mode);
       setTimeout(() => {
         if (videoRef.current) videoRef.current.srcObject = ms;
       }, 100);
-    } catch {
-      alert("Camera access denied or not available.");
+    } catch (error) {
+      console.error("Camera error:", error);
+      alert(
+        "Camera access denied or not available.\n\n" +
+        "Make sure:\n" +
+        "• You granted camera permission\n" +
+        "• Your device has a camera\n" +
+        "• HTTPS is enabled (required for camera access)"
+      );
     }
   };
 
@@ -658,8 +680,8 @@ export default function EntryForm({ onEntryAdded }) {
               <PhotoBox
                 title="📸 Client Live"
                 preview={livePhotoPreview}
-                onCapture={() => startWebcam("live")}
-                onRetake={() => startWebcam("live")}
+                onCapture={(mode) => startWebcam("live", mode)}
+                onRetake={(mode) => startWebcam("live", mode)}
                 onRemove={() => removePhoto("live")}
               />
 
@@ -667,8 +689,8 @@ export default function EntryForm({ onEntryAdded }) {
               <PhotoBox
                 title="🪪 ID Front"
                 preview={idFrontPreview}
-                onCapture={() => startWebcam("idFront")}
-                onRetake={() => startWebcam("idFront")}
+                onCapture={(mode) => startWebcam("idFront", mode)}
+                onRetake={(mode) => startWebcam("idFront", mode)}
                 onRemove={() => removePhoto("idFront")}
               />
 
@@ -676,8 +698,8 @@ export default function EntryForm({ onEntryAdded }) {
               <PhotoBox
                 title="🪪 ID Back"
                 preview={idBackPreview}
-                onCapture={() => startWebcam("idBack")}
-                onRetake={() => startWebcam("idBack")}
+                onCapture={(mode) => startWebcam("idBack", mode)}
+                onRetake={(mode) => startWebcam("idBack", mode)}
                 onRemove={() => removePhoto("idBack")}
               />
             </div>
@@ -752,14 +774,37 @@ export default function EntryForm({ onEntryAdded }) {
   );
 }
 
-// ✅ REUSABLE PHOTO BOX COMPONENT - ALL SAME SIZE
+// ✅ REUSABLE PHOTO BOX COMPONENT - WITH CAMERA MODE TOGGLE
 function PhotoBox({ title, preview, onCapture, onRetake, onRemove }) {
   return (
     <div className="ef-photo-box">
       <div className="ef-photo-box-head">{title}</div>
+      
+      {/* Camera Mode Buttons - Show when no preview */}
+      {!preview && (
+        <div className="ef-camera-mode-buttons">
+          <button
+            type="button"
+            className="ef-camera-mode-single-btn ef-camera-front"
+            onClick={() => onCapture("user")}
+            title="Use Front Camera"
+          >
+            📱 Front
+          </button>
+          <button
+            type="button"
+            className="ef-camera-mode-single-btn ef-camera-back"
+            onClick={() => onCapture("environment")}
+            title="Use Back Camera"
+          >
+            📷 Back
+          </button>
+        </div>
+      )}
+
       <div
         className={`ef-photo-square ${preview ? "captured" : ""}`}
-        onClick={!preview ? onCapture : undefined}
+        onClick={!preview ? () => onCapture("user") : undefined}
       >
         {preview ? (
           <>
@@ -775,7 +820,7 @@ function PhotoBox({ title, preview, onCapture, onRetake, onRemove }) {
       </div>
       {preview ? (
         <div className="ef-photo-btns">
-          <button type="button" className="ef-photo-retake" onClick={onRetake}>
+          <button type="button" className="ef-photo-retake" onClick={() => onRetake("user")}>
             🔄 Retake
           </button>
           <button type="button" className="ef-photo-del" onClick={onRemove}>
@@ -783,7 +828,11 @@ function PhotoBox({ title, preview, onCapture, onRetake, onRemove }) {
           </button>
         </div>
       ) : (
-        <button type="button" className="ef-photo-cap-btn" onClick={onCapture}>
+        <button 
+          type="button" 
+          className="ef-photo-cap-btn" 
+          onClick={() => onCapture("user")}
+        >
           📹 Open Camera
         </button>
       )}

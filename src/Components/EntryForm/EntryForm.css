@@ -230,7 +230,6 @@
   );
 }
 
-
 .ef-col--sections > * {
   margin-bottom: 8px;
 }
@@ -296,7 +295,6 @@
 .ef-field:last-child {
   margin-bottom: 0; /* No margin on last field */
 }
-
 
 .ef-label {
   font-size: 9px;
@@ -1245,10 +1243,8 @@
   box-shadow: 0 4px 20px rgba(201, 168, 76, 0.3);
 }
 
-
 /* ══════════════════════════════════════════════════════
    CUSTOM TIME INPUT - 12-HOUR DISPLAY
-   Add to EntryForm.css
    ══════════════════════════════════════════════════════ */
 
 .ef-time-input-wrap {
@@ -1277,7 +1273,7 @@
   cursor: pointer;
   transition: all 0.2s;
   width: 100%;
-  
+
   /* 12-hour format styling */
   font-size: 12px;
   font-weight: 600;
@@ -1297,14 +1293,178 @@
     inset 0 0 10px rgba(201, 168, 76, 0.02);
 }
 
-/* Placeholder state */
-.ef-time-display:empty::before {
-  content: "Select Time";
-  color: rgba(240, 234, 214, 0.12);
-  font-size: 12px;
-  font-weight: 400;
+/* ══════════════════════════════════════════════════════
+   CAMERA MODE BUTTONS - FRONT, BACK, OPEN CAMERA
+   ══════════════════════════════════════════════════════ */
+
+.ef-camera-mode-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
+.ef-camera-mode-single-btn {
+  padding: 10px 12px;
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  background: transparent;
+  color: rgba(99, 102, 241, 0.7);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: "Outfit", sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.ef-camera-mode-single-btn:hover {
+  border-color: rgba(99, 102, 241, 0.6);
+  background: rgba(99, 102, 241, 0.1);
+  color: rgba(99, 102, 241, 0.95);
+}
+
+.ef-camera-mode-single-btn:active {
+  transform: scale(0.98);
+}
+
+.ef-camera-front {
+  border-color: rgba(82, 148, 201, 0.4);
+  color: rgba(82, 148, 201, 0.8);
+}
+
+.ef-camera-front:hover {
+  border-color: rgba(82, 148, 201, 0.65);
+  background: rgba(82, 148, 201, 0.12);
+  color: var(--blue);
+}
+
+.ef-camera-back {
+  border-color: rgba(224, 82, 130, 0.4);
+  color: rgba(224, 82, 130, 0.8);
+}
+
+.ef-camera-back:hover {
+  border-color: rgba(224, 82, 130, 0.65);
+  background: rgba(224, 82, 130, 0.12);
+  color: #e05282;
+}
+
+/* ══════════════════════════════════════════════════════
+   PAX SUMMARY
+   ══════════════════════════════════════════════════════ */
+
+.ef-pax-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  background: linear-gradient(
+    135deg,
+    rgba(201, 168, 76, 0.12),
+    rgba(201, 168, 76, 0.06)
+  );
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(201, 168, 76, 0.08),
+    0 2px 8px rgba(201, 168, 76, 0.04);
+}
+
+.ef-pax-summary-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ef-pax-summary-icon {
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.ef-pax-summary-label {
+  color: rgba(201, 168, 76, 0.7);
+  font-size: 9px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ef-pax-summary-value {
+  color: var(--gold-bright);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: "Cormorant Garamond", serif;
+  min-width: 18px;
+  text-align: center;
+}
+
+.ef-pax-summary-divider {
+  color: rgba(201, 168, 76, 0.3);
+  font-size: 9px;
+  font-weight: 300;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   TOTAL PEOPLE COUNTER
+   ══════════════════════════════════════════════════════ */
+
+.ef-pax-total {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 8px 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(157, 122, 245, 0.12),
+    rgba(157, 122, 245, 0.06)
+  );
+  border: 1px solid rgba(157, 122, 245, 0.25);
+  border-radius: 6px;
+  box-shadow:
+    inset 0 1px 0 rgba(157, 122, 245, 0.08),
+    0 2px 8px rgba(157, 122, 245, 0.04);
+}
+
+.ef-pax-total-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.ef-pax-total-label {
+  color: rgba(157, 122, 245, 0.7);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.ef-pax-total-value {
+  color: var(--purple);
+  font-size: 18px;
+  font-weight: 700;
+  font-family: "Cormorant Garamond", serif;
+  min-width: 30px;
+  text-align: center;
+  background: rgba(157, 122, 245, 0.08);
+  padding: 2px 12px;
+  border-radius: 4px;
+}
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE DESIGN
+   ══════════════════════════════════════════════════════ */
 
 @media (max-width: 1024px) {
   .ef-body {
@@ -1331,7 +1491,7 @@
     padding-top: 22px;
     margin-top: 10px;
 
-    /* Show photos in a row on mobile */
+    /* Show photos in a row on tablet */
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
@@ -1373,6 +1533,39 @@
   .ef-row2 {
     grid-template-columns: 1fr;
   }
+
+  /* Camera mode buttons responsive */
+  .ef-camera-mode-buttons {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .ef-camera-mode-single-btn {
+    padding: 8px 10px;
+    font-size: 9px;
+    border-width: 1px;
+  }
+
+  /* Pax summary responsive */
+  .ef-pax-summary {
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 10px;
+    justify-content: center;
+  }
+
+  .ef-pax-summary-divider {
+    display: none;
+  }
+
+  /* Total people counter responsive */
+  .ef-pax-total {
+    font-size: 9px;
+  }
+
+  .ef-pax-total-value {
+    font-size: 16px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1393,17 +1586,50 @@
   .ef-cat-grid {
     grid-template-columns: repeat(3, 1fr);
   }
-}
 
-/* Chrome, Safari, Edge */
-.ef-pay-inp::-webkit-outer-spin-button,
-.ef-pay-inp::-webkit-inner-spin-button,
-.ef-cover-inp::-webkit-outer-spin-button,
-.ef-cover-inp::-webkit-inner-spin-button,
-.ef-input[type="number"]::-webkit-outer-spin-button,
-.ef-input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+  /* Camera mode buttons responsive */
+  .ef-camera-mode-buttons {
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .ef-camera-mode-single-btn {
+    padding: 7px 8px;
+    font-size: 8px;
+  }
+
+  /* Pax summary responsive */
+  .ef-pax-summary {
+    font-size: 9px;
+    padding: 8px 10px;
+  }
+
+  .ef-pax-summary-value {
+    font-size: 12px;
+  }
+
+  .ef-pax-summary-label {
+    font-size: 8px;
+  }
+
+  /* Total people counter responsive */
+  .ef-pax-total {
+    font-size: 8px;
+    padding: 6px 12px;
+  }
+
+  .ef-pax-total-value {
+    font-size: 14px;
+    padding: 1px 10px;
+  }
+
+  .ef-pax-total-icon {
+    font-size: 14px;
+  }
+
+  .ef-pax-total-label {
+    font-size: 8px;
+  }
 }
 
 /* Firefox */
@@ -1421,163 +1647,3 @@ input[type="time"]::-webkit-datetime-edit-ampm-field,
 input[type="time"]::-webkit-calendar-picker-indicator {
   display: none;
 }
-
-
-
-/* ══════════════════════════════════════════════════════
-   PAX SUMMARY
-   ══════════════════════════════════════════════════════ */
-
-.ef-pax-summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  /* justify-content: space-around; ✅ Changed from center to space-around */
-  gap: 5px; /* ✅ Reduced from 12px to 8px */
-  margin: 8px 0 0;
-  padding: 10px 12px; /* ✅ Reduced horizontal padding */
-  background: linear-gradient(
-    135deg,
-    rgba(201, 168, 76, 0.12),
-    rgba(201, 168, 76, 0.06)
-  );
-  border: 1px solid rgba(201, 168, 76, 0.25);
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  box-shadow: 
-    inset 0 1px 0 rgba(201, 168, 76, 0.08),
-    0 2px 8px rgba(201, 168, 76, 0.04);
-}
-
-
-.ef-pax-summary-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.ef-pax-summary-icon {
-  font-size: 13px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.ef-pax-summary-label {
-  color: rgba(201, 168, 76, 0.7);
-  font-size: 9px;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.ef-pax-summary-value {
-  color: var(--gold-bright);
-  font-size: 13px;
-  font-weight: 700;
-  font-family: "Cormorant Garamond", serif;
-  min-width: 18px;
-  text-align: center;
-}
-
-.ef-pax-summary-divider {
-  color: rgba(201, 168, 76, 0.3);
-  font-size: 9px;
-  font-weight: 300;
-  margin: 0 ;
-  flex-shrink: 0;
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-.ef-pax-summary {
-    flex-wrap: wrap;
-    gap: 6px;
-    font-size: 10px;
-    justify-content: center;
-  }
-
-  
-  .ef-pax-summary-divider {
-    display: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .ef-pax-summary {
-    font-size: 9px;
-    padding: 8px, 10px;
-
-  }
-  
-  .ef-pax-summary-value {
-    font-size: 12px;
-  }
-
-  .ef-pax-summary-label {
-    font-size: 8px;
-  }
-
-}
-
-
-/* ══════════════════════════════════════════════════════
-   TOTAL PEOPLE COUNTER - ADD TO EntryForm.css
-   ══════════════════════════════════════════════════════ */
-
-.ef-pax-total {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 8px 0 0;
-  padding: 8px 16px;
-  background: linear-gradient(
-    135deg,
-    rgba(157, 122, 245, 0.12),
-    rgba(157, 122, 245, 0.06)
-  );
-  border: 1px solid rgba(157, 122, 245, 0.25);
-  border-radius: 6px;
-  box-shadow: 
-    inset 0 1px 0 rgba(157, 122, 245, 0.08),
-    0 2px 8px rgba(157, 122, 245, 0.04);
-}
-
-.ef-pax-total-icon {
-  font-size: 16px;
-  line-height: 1;
-}
-
-.ef-pax-total-label {
-  color: rgba(157, 122, 245, 0.7);
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  font-weight: 600;
-}
-
-.ef-pax-total-value {
-  color: var(--purple);
-  font-size: 18px;
-  font-weight: 700;
-  font-family: "Cormorant Garamond", serif;
-  min-width: 30px;
-  text-align: center;
-  background: rgba(157, 122, 245, 0.08);
-  padding: 2px 12px;
-  border-radius: 4px;
-}
-
-/* Mobile */
-@media (max-width: 768px) {
-  .ef-pax-total {
-    font-size: 9px;
-  }
-  
-  .ef-pax-total-value {
-    font-size: 16px;
-  }
-}
-
