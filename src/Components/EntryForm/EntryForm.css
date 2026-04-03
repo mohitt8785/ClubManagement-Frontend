@@ -1647,3 +1647,518 @@ input[type="time"]::-webkit-datetime-edit-ampm-field,
 input[type="time"]::-webkit-calendar-picker-indicator {
   display: none;
 }
+
+
+/* ══════════════════════════════════════════════════════
+   PROFESSIONAL CAMERA INTERFACE - UPDATED
+   Single "Open Camera" button → Toggle inside camera view
+   ══════════════════════════════════════════════════════ */
+
+/* Remove old camera mode buttons */
+.ef-camera-mode-buttons {
+  display: none; /* Hide front/back buttons before opening camera */
+}
+
+/* Photo Box - Clean single button */
+.ef-photo-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ef-photo-box-head {
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+  opacity: 0.9;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(201, 168, 76, 0.08);
+}
+
+/* Photo Square */
+.ef-photo-square {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: rgba(255, 255, 255, 0.018);
+  border: 2px dashed rgba(201, 168, 76, 0.18);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.ef-photo-square:hover:not(.captured) {
+  border-color: rgba(201, 168, 76, 0.42);
+  background: rgba(201, 168, 76, 0.03);
+  box-shadow: 0 0 24px rgba(201, 168, 76, 0.08);
+}
+
+.ef-photo-square.captured {
+  border: 2px solid rgba(82, 201, 124, 0.45);
+  cursor: default;
+  box-shadow: 0 0 20px rgba(82, 201, 124, 0.08);
+}
+
+/* Empty State */
+.ef-photo-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+}
+
+.ef-photo-cam-icon {
+  font-size: 36px;
+  opacity: 0.4;
+}
+
+.ef-photo-tap {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(240, 234, 214, 0.28);
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Photo Image */
+.ef-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+}
+
+/* Captured Badge */
+.ef-photo-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(82, 201, 124, 0.88);
+  color: #07070d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border-radius: 50px;
+  backdrop-filter: blur(6px);
+}
+
+/* ✅ SINGLE OPEN CAMERA BUTTON - Professional */
+.ef-photo-cap-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, 
+    rgba(201,168,76,0.12) 0%, 
+    rgba(201,168,76,0.05) 100%
+  );
+  border: 2px solid rgba(201,168,76,0.3);
+  border-radius: 6px;
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Outfit", sans-serif;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ef-photo-cap-btn:hover {
+  background: linear-gradient(135deg, 
+    rgba(201,168,76,0.18) 0%, 
+    rgba(201,168,76,0.08) 100%
+  );
+  border-color: rgba(201,168,76,0.5);
+  box-shadow: 0 4px 16px rgba(201,168,76,0.15);
+  transform: translateY(-1px);
+}
+
+/* After photo captured - Retake & Delete */
+.ef-photo-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.ef-photo-retake {
+  flex: 1;
+  padding: 12px;
+  background: rgba(201, 168, 76, 0.07);
+  border: 2px solid rgba(201, 168, 76, 0.28);
+  border-radius: 6px;
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Outfit", sans-serif;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.ef-photo-retake:hover {
+  background: rgba(201, 168, 76, 0.13);
+  border-color: rgba(201, 168, 76, 0.45);
+  transform: translateY(-1px);
+}
+
+.ef-photo-del {
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 2px solid rgba(224, 82, 82, 0.28);
+  border-radius: 6px;
+  color: var(--red);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ef-photo-del:hover {
+  background: rgba(224, 82, 82, 0.08);
+  border-color: rgba(224, 82, 82, 0.5);
+  transform: translateY(-1px);
+}
+
+/* ══════════════════════════════════════════════════════
+   WEBCAM MODAL - Professional with in-camera toggle
+   ══════════════════════════════════════════════════════ */
+
+.ef-webcam-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4000;
+  padding: 20px;
+  backdrop-filter: blur(16px);
+  animation: efFadeIn 0.3s ease;
+}
+
+@keyframes efFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ef-webcam-modal {
+  background: linear-gradient(180deg, 
+    rgba(8, 7, 20, 0.99) 0%, 
+    rgba(10, 9, 22, 0.98) 100%
+  );
+  border: 2px solid rgba(201, 168, 76, 0.25);
+  border-radius: 12px;
+  max-width: 680px;
+  width: 100%;
+  box-shadow: 
+    0 40px 100px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(201, 168, 76, 0.06),
+    inset 0 1px 0 rgba(201, 168, 76, 0.08);
+  animation: efModalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes efModalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Header */
+.ef-webcam-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 28px;
+  border-bottom: 2px solid rgba(201, 168, 76, 0.12);
+  background: linear-gradient(180deg, 
+    rgba(201,168,76,0.04) 0%, 
+    transparent 100%
+  );
+}
+
+.ef-webcam-head h3 {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 24px;
+  color: var(--gold);
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.ef-webcam-close {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 2px solid rgba(201, 168, 76, 0.18);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ef-webcam-close:hover {
+  border-color: rgba(224, 82, 82, 0.5);
+  color: var(--red);
+  background: rgba(224, 82, 82, 0.05);
+  transform: rotate(90deg);
+}
+
+/* Body - Video Container */
+.ef-webcam-body {
+  padding: 24px;
+  background: #000;
+  position: relative;
+}
+
+.ef-webcam-video {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 2px solid rgba(201, 168, 76, 0.28);
+  display: block;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+/* ✅ NEW: FLOATING CAMERA TOGGLE BUTTON */
+.ef-camera-toggle-btn {
+  position: absolute;
+  top: 40px;
+  right: 40px;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, 
+    rgba(201,168,76,0.95) 0%, 
+    rgba(201,168,76,0.85) 100%
+  );
+  border: 3px solid rgba(255,255,255,0.2);
+  border-radius: 50%;
+  color: #07070d;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 8px 24px rgba(201,168,76,0.4),
+    0 0 0 4px rgba(201,168,76,0.1);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 
+      0 8px 24px rgba(201,168,76,0.4),
+      0 0 0 4px rgba(201,168,76,0.1);
+  }
+  50% {
+    box-shadow: 
+      0 8px 32px rgba(201,168,76,0.6),
+      0 0 0 6px rgba(201,168,76,0.15);
+  }
+}
+
+.ef-camera-toggle-btn:hover {
+  transform: scale(1.1) rotate(180deg);
+  background: linear-gradient(135deg, 
+    rgba(232,201,106,1) 0%, 
+    rgba(201,168,76,1) 100%
+  );
+  box-shadow: 
+    0 12px 32px rgba(201,168,76,0.6),
+    0 0 0 6px rgba(201,168,76,0.2);
+}
+
+.ef-camera-toggle-btn:active {
+  transform: scale(0.95) rotate(180deg);
+}
+
+/* Mode indicator label */
+.ef-camera-mode-label {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  padding: 8px 16px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 50px;
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+  font-family: "Outfit", sans-serif;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+/* Footer - Action Buttons */
+.ef-webcam-foot {
+  display: flex;
+  gap: 14px;
+  padding: 20px 28px;
+  border-top: 2px solid rgba(201, 168, 76, 0.12);
+  background: linear-gradient(0deg, 
+    rgba(201,168,76,0.02) 0%, 
+    transparent 100%
+  );
+}
+
+.ef-wbtn {
+  flex: 1;
+  padding: 15px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: "Outfit", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ef-wbtn--cancel {
+  background: transparent;
+  border: 2px solid rgba(201, 168, 76, 0.18);
+  color: var(--muted);
+}
+
+.ef-wbtn--cancel:hover {
+  border-color: rgba(224, 82, 82, 0.5);
+  color: var(--red);
+  background: rgba(224, 82, 82, 0.05);
+  transform: translateY(-2px);
+}
+
+.ef-wbtn--capture {
+  background: linear-gradient(135deg, 
+    var(--gold) 0%, 
+    #9a7328 100%
+  );
+  border: none;
+  color: #07070d;
+  box-shadow: 0 4px 16px rgba(201,168,76,0.3);
+}
+
+.ef-wbtn--capture:hover {
+  background: linear-gradient(135deg, 
+    var(--gold-bright) 0%, 
+    var(--gold) 100%
+  );
+  box-shadow: 0 8px 24px rgba(201,168,76,0.5);
+  transform: translateY(-2px);
+}
+
+.ef-wbtn--capture:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE - Camera Interface
+   ══════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .ef-webcam-modal {
+    max-width: 95%;
+  }
+
+  .ef-webcam-head {
+    padding: 16px 20px;
+  }
+
+  .ef-webcam-head h3 {
+    font-size: 20px;
+  }
+
+  .ef-webcam-close {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .ef-webcam-body {
+    padding: 16px;
+  }
+
+  /* Toggle button smaller on mobile */
+  .ef-camera-toggle-btn {
+    width: 48px;
+    height: 48px;
+    top: 30px;
+    right: 30px;
+    font-size: 20px;
+  }
+
+  .ef-camera-mode-label {
+    top: 30px;
+    left: 30px;
+    font-size: 9px;
+    padding: 6px 12px;
+  }
+
+  .ef-webcam-foot {
+    padding: 16px 20px;
+    gap: 10px;
+  }
+
+  .ef-wbtn {
+    padding: 12px;
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ef-camera-toggle-btn {
+    width: 44px;
+    height: 44px;
+    top: 24px;
+    right: 24px;
+    font-size: 18px;
+  }
+
+  .ef-camera-mode-label {
+    top: 24px;
+    left: 24px;
+    font-size: 8px;
+    padding: 5px 10px;
+  }
+
+  .ef-wbtn {
+    font-size: 9px;
+    padding: 11px;
+  }
+}

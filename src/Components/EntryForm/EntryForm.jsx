@@ -722,10 +722,12 @@ export default function EntryForm({ onEntryAdded }) {
 
       <div className="ef-footer">Jaguar Club · Entry Management System · ★</div>
 
-      {/* WEBCAM MODAL */}
+     // ✅ UPDATED: Webcam Modal - Add inside EntryForm component (replace existing webcam modal)
       {showWebcam && (
         <div className="ef-webcam-overlay" onClick={stopWebcam}>
           <div className="ef-webcam-modal" onClick={(e) => e.stopPropagation()}>
+
+            {/* Header */}
             <div className="ef-webcam-head">
               <h3>
                 📸{" "}
@@ -743,14 +745,41 @@ export default function EntryForm({ onEntryAdded }) {
                 ✕
               </button>
             </div>
+
+            {/* Body - Video with floating toggle */}
             <div className="ef-webcam-body">
+              {/* Camera mode label */}
+              <div className="ef-camera-mode-label">
+                {cameraMode === "user" ? " Front " : " Back "}
+              </div>
+
+              {/* Video */}
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 className="ef-webcam-video"
               />
+
+              {/* ✅ NEW: Floating toggle button */}
+              <button
+                type="button"
+                className="ef-camera-toggle-btn"
+                onClick={() => {
+                  // Toggle between front and back camera
+                  const newMode = cameraMode === "user" ? "environment" : "user";
+                  stopWebcam();
+                  setTimeout(() => {
+                    startWebcam(showWebcam, newMode);
+                  }, 100);
+                }}
+                title="Switch Camera"
+              >
+                🔄
+              </button>
             </div>
+
+            {/* Footer - Capture & Cancel */}
             <div className="ef-webcam-foot">
               <button
                 type="button"
@@ -770,38 +799,19 @@ export default function EntryForm({ onEntryAdded }) {
           </div>
         </div>
       )}
+
     </div>
   );
 }
 
-// ✅ REUSABLE PHOTO BOX COMPONENT - WITH CAMERA MODE TOGGLE
+
+// ✅ UPDATED: PhotoBox Component - Single "Open Camera" button
 function PhotoBox({ title, preview, onCapture, onRetake, onRemove }) {
   return (
     <div className="ef-photo-box">
       <div className="ef-photo-box-head">{title}</div>
-      
-      {/* Camera Mode Buttons - Show when no preview */}
-      {!preview && (
-        <div className="ef-camera-mode-buttons">
-          <button
-            type="button"
-            className="ef-camera-mode-single-btn ef-camera-front"
-            onClick={() => onCapture("user")}
-            title="Use Front Camera"
-          >
-            📱 Front
-          </button>
-          <button
-            type="button"
-            className="ef-camera-mode-single-btn ef-camera-back"
-            onClick={() => onCapture("environment")}
-            title="Use Back Camera"
-          >
-            📷 Back
-          </button>
-        </div>
-      )}
 
+      {/* Photo Square - Click to capture or show preview */}
       <div
         className={`ef-photo-square ${preview ? "captured" : ""}`}
         onClick={!preview ? () => onCapture("user") : undefined}
@@ -818,7 +828,10 @@ function PhotoBox({ title, preview, onCapture, onRetake, onRemove }) {
           </div>
         )}
       </div>
+
+      {/* Bottom buttons */}
       {preview ? (
+        // After photo captured: Show Retake & Delete
         <div className="ef-photo-btns">
           <button type="button" className="ef-photo-retake" onClick={() => onRetake("user")}>
             🔄 Retake
@@ -828,9 +841,10 @@ function PhotoBox({ title, preview, onCapture, onRetake, onRemove }) {
           </button>
         </div>
       ) : (
-        <button 
-          type="button" 
-          className="ef-photo-cap-btn" 
+        // No photo yet: Show Open Camera
+        <button
+          type="button"
+          className="ef-photo-cap-btn"
           onClick={() => onCapture("user")}
         >
           📹 Open Camera
@@ -839,6 +853,7 @@ function PhotoBox({ title, preview, onCapture, onRetake, onRemove }) {
     </div>
   );
 }
+
 
 function Sec({ n, t, req, children }) {
   return (
